@@ -66,11 +66,11 @@
     @apply font-sans antialiased text-foreground;
   }
   body.dark {
-    background-image: 
-      linear-gradient(rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.5)),
-      url("/dark-bg.jpg");
+    background-color: #0f172a;
+    background-image: url("/dark-bg.jpg");
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
     background-attachment: fixed;
   }
   h1, h2, h3, h4, h5, h6 {
