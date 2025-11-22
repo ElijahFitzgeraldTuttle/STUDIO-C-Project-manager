@@ -3,9 +3,10 @@ import { TaskCard } from "@/components/task-card";
 import { Plus, Search, SlidersHorizontal, LogOut } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { fetchTasks, updateTask, getUnreadCounts } from "@/lib/api";
+import { fetchTasks, updateTask, getUnreadCounts, createTask } from "@/lib/api";
 import { dbTaskToTask, taskToDbTask, type Task, type Status, statusConfig } from "@/lib/types";
 import { useUser } from "@/contexts/UserContext";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +14,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 function UserAvatar() {
   const { currentUser, logout } = useUser();
@@ -44,6 +57,10 @@ function UserAvatar() {
 export default function Home() {
   const queryClient = useQueryClient();
   const { currentUser } = useUser();
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  const [newTaskStatus, setNewTaskStatus] = useState<Status>("prospect");
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDescription, setNewTaskDescription] = useState("");
 
   const { data: dbTasks = [], isLoading } = useQuery({
     queryKey: ["tasks"],
@@ -67,8 +84,35 @@ export default function Home() {
     },
   });
 
+  const createTaskMutation = useMutation({
+    mutationFn: createTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      setIsAddTaskOpen(false);
+      setNewTaskTitle("");
+      setNewTaskDescription("");
+    },
+  });
+
   const handleUpdateTask = (updatedTask: Task) => {
     updateTaskMutation.mutate({ id: updatedTask.id, data: updatedTask });
+  };
+
+  const handleCreateTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskTitle.trim()) return;
+
+    createTaskMutation.mutate({
+      title: newTaskTitle,
+      description: newTaskDescription,
+      status: newTaskStatus,
+      assignee: null,
+      tags: [],
+      deliveredTracking: false,
+      invoicedTracking: false,
+      paidTracking: false,
+      distributedTracking: false,
+    });
   };
 
   const columns: Status[] = ["prospect", "scheduled", "in-progress", "complete"];
@@ -162,10 +206,72 @@ export default function Home() {
                     </div>
                   )}
                   
-                  <button className="mt-auto flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-white/50 rounded-lg transition-all border border-transparent hover:border-slate-200/50 group">
-                    <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    Add Task
-                  </button>
+                  <Dialog open={isAddTaskOpen && newTaskStatus === status} onOpenChange={(open) => {
+                    if (!open) setIsAddTaskOpen(false);
+                  }}>
+                    <DialogTrigger asChild>
+                      <button 
+                        onClick={() => {
+                          setNewTaskStatus(status);
+                          setIsAddTaskOpen(true);
+                        }}
+                        className="mt-auto flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-white/50 rounded-lg transition-all border border-transparent hover:border-slate-200/50 group"
+                        data-testid={`button-add-task-${status}`}
+                      >
+                        <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        Add Task
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                      <DialogHeader>
+                        <DialogTitle>Create New Task</DialogTitle>
+                        <DialogDescription>
+                          Add a new task to {config.label}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleCreateTask} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="title">Title</Label>
+                          <Input
+                            id="title"
+                            value={newTaskTitle}
+                            onChange={(e) => setNewTaskTitle(e.target.value)}
+                            placeholder="Enter task title..."
+                            data-testid="input-task-title"
+                            autoFocus
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="description">Description</Label>
+                          <Textarea
+                            id="description"
+                            value={newTaskDescription}
+                            onChange={(e) => setNewTaskDescription(e.target.value)}
+                            placeholder="Enter task description..."
+                            rows={4}
+                            data-testid="input-task-description"
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsAddTaskOpen(false)}
+                            data-testid="button-cancel-task"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={!newTaskTitle.trim()}
+                            data-testid="button-create-task"
+                          >
+                            Create Task
+                          </Button>
+                        </div>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             );
