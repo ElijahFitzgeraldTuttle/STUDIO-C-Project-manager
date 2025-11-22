@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { tasks, comments, commentReads, subtasks, payouts, payees, dashboards, type Task, type InsertTask, type Comment, type InsertComment, type InsertCommentRead, type Subtask, type InsertSubtask, type Payout, type InsertPayout, type Payee, type InsertPayee, type Dashboard, type InsertDashboard } from "@shared/schema";
+import { tasks, comments, commentReads, subtasks, payouts, payees, dashboards, columns, type Task, type InsertTask, type Comment, type InsertComment, type InsertCommentRead, type Subtask, type InsertSubtask, type Payout, type InsertPayout, type Payee, type InsertPayee, type Dashboard, type InsertDashboard, type Column, type InsertColumn } from "@shared/schema";
 import { eq, and, inArray, isNull } from "drizzle-orm";
 
 export interface IStorage {
@@ -37,6 +37,12 @@ export interface IStorage {
   createDashboard(dashboard: InsertDashboard): Promise<Dashboard>;
   updateDashboard(id: number, dashboard: Partial<InsertDashboard>): Promise<Dashboard | undefined>;
   deleteDashboard(id: number): Promise<void>;
+
+  // Column operations
+  getColumns(dashboardId: number): Promise<Column[]>;
+  createColumn(column: InsertColumn): Promise<Column>;
+  updateColumn(id: number, column: Partial<InsertColumn>): Promise<Column | undefined>;
+  deleteColumn(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -279,6 +285,28 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDashboard(id: number): Promise<void> {
     await db.delete(dashboards).where(eq(dashboards.id, id));
+  }
+
+  async getColumns(dashboardId: number): Promise<Column[]> {
+    return await db.select().from(columns).where(eq(columns.dashboardId, dashboardId)).orderBy(columns.order);
+  }
+
+  async createColumn(insertColumn: InsertColumn): Promise<Column> {
+    const result = await db.insert(columns).values(insertColumn).returning();
+    return result[0];
+  }
+
+  async updateColumn(id: number, columnUpdate: Partial<InsertColumn>): Promise<Column | undefined> {
+    const result = await db
+      .update(columns)
+      .set(columnUpdate)
+      .where(eq(columns.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteColumn(id: number): Promise<void> {
+    await db.delete(columns).where(eq(columns.id, id));
   }
 }
 
