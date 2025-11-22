@@ -1,5 +1,5 @@
 import { Task, statusConfig, TaskTracking, Comment } from "@/lib/mock-data";
-import { Calendar, MoreHorizontal, User, CheckCircle2, MessageSquare, Send } from "lucide-react";
+import { MoreHorizontal, User, CheckCircle2, MessageSquare, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -152,121 +152,142 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
         </motion.div>
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className={cn("p-2 rounded-lg", statusConfig[task.status].bg)}>
-              <StatusIcon className={cn("w-5 h-5", statusConfig[task.status].color)} />
-            </div>
-            <div className={cn("text-xs font-medium px-2.5 py-0.5 rounded-full border", 
-              statusConfig[task.status].bg, 
-              statusConfig[task.status].color,
-              statusConfig[task.status].borderColor
-            )}>
-              {statusConfig[task.status].label}
-            </div>
-          </div>
-          <DialogTitle className="text-xl">{task.title}</DialogTitle>
-          <DialogDescription className="text-slate-500 pt-2">
-            {task.description}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="grid gap-6 py-4">
-          {/* Tracking Section */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium text-slate-900 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-slate-500" />
-              Project Tracking
-            </h4>
-            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-              {Object.entries(task.tracking).map(([key, value]) => (
-                <div key={key} className="flex items-center gap-3 p-2 hover:bg-white rounded-lg transition-colors">
-                  <Checkbox 
-                    id={`modal-tracking-${task.id}-${key}`} 
-                    checked={value}
-                    onCheckedChange={(checked) => handleTrackingChange(key as keyof TaskTracking, checked === true)}
-                    className="h-5 w-5 rounded-md border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
-                  />
-                  <Label 
-                    htmlFor={`modal-tracking-${task.id}-${key}`}
-                    className="text-sm text-slate-700 capitalize cursor-pointer font-medium select-none"
-                  >
-                    {key}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Assignee Section */}
-          <div className="space-y-1.5 p-4 rounded-lg border border-slate-100 bg-white">
-            <div className="flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-wide mb-2">
-              <User className="w-3.5 h-3.5" />
-              Assignee
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-medium text-sm border border-indigo-200">
-                {task.assignee ? task.assignee.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
-              </div>
-              <Input 
-                value={task.assignee || ""} 
-                onChange={handleAssigneeChange}
-                placeholder="Add assignee..."
-                className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 placeholder:text-slate-400 font-medium text-slate-900"
-              />
-            </div>
-          </div>
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        <div className="grid grid-cols-1 md:grid-cols-5 h-full max-h-[80vh]">
           
-          {/* Comments Section */}
-          <div className="space-y-4">
-             <h4 className="text-sm font-medium text-slate-900 flex items-center gap-2 border-t border-slate-100 pt-4">
-              <MessageSquare className="w-4 h-4 text-slate-500" />
-              Comments
-            </h4>
+          {/* Left Column: Task Details */}
+          <div className="md:col-span-3 p-6 overflow-y-auto border-r border-slate-100">
+            <DialogHeader className="mb-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className={cn("p-2 rounded-lg", statusConfig[task.status].bg)}>
+                  <StatusIcon className={cn("w-5 h-5", statusConfig[task.status].color)} />
+                </div>
+                <div className={cn("text-xs font-medium px-2.5 py-0.5 rounded-full border", 
+                  statusConfig[task.status].bg, 
+                  statusConfig[task.status].color,
+                  statusConfig[task.status].borderColor
+                )}>
+                  {statusConfig[task.status].label}
+                </div>
+              </div>
+              <DialogTitle className="text-xl leading-snug">{task.title}</DialogTitle>
+              <DialogDescription className="text-slate-500 pt-2">
+                {task.description}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              {/* Tracking Section */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-slate-500" />
+                  Project Tracking
+                </h4>
+                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  {Object.entries(task.tracking).map(([key, value]) => (
+                    <div key={key} className="flex items-center gap-3 p-2 hover:bg-white rounded-lg transition-colors">
+                      <Checkbox 
+                        id={`modal-tracking-${task.id}-${key}`} 
+                        checked={value}
+                        onCheckedChange={(checked) => handleTrackingChange(key as keyof TaskTracking, checked === true)}
+                        className="h-5 w-5 rounded-md border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                      />
+                      <Label 
+                        htmlFor={`modal-tracking-${task.id}-${key}`}
+                        className="text-sm text-slate-700 capitalize cursor-pointer font-medium select-none"
+                      >
+                        {key}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Assignee Section */}
+              <div className="space-y-1.5 p-4 rounded-lg border border-slate-100 bg-white">
+                <div className="flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-wide mb-2">
+                  <User className="w-3.5 h-3.5" />
+                  Assignee
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-medium text-sm border border-indigo-200">
+                    {task.assignee ? task.assignee.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
+                  </div>
+                  <Input 
+                    value={task.assignee || ""} 
+                    onChange={handleAssigneeChange}
+                    placeholder="Add assignee..."
+                    className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 placeholder:text-slate-400 font-medium text-slate-900"
+                  />
+                </div>
+              </div>
+              
+              {/* Tags */}
+              <div className="flex flex-wrap gap-2 pt-2">
+                {task.tags.map(tag => (
+                  <span key={tag} className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-md border border-slate-200">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Comments Bubble */}
+          <div className="md:col-span-2 bg-slate-50/50 flex flex-col h-full max-h-[80vh]">
+            <div className="p-4 border-b border-slate-200/60 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
+              <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-indigo-500" />
+                Comments
+              </h4>
+            </div>
             
-            <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {task.comments.length === 0 ? (
-                <p className="text-sm text-slate-400 italic text-center py-4">No comments yet</p>
+                <div className="h-full flex flex-col items-center justify-center text-slate-400 p-8 text-center">
+                  <MessageSquare className="w-8 h-8 mb-2 opacity-20" />
+                  <p className="text-sm">No comments yet.<br/>Start the conversation!</p>
+                </div>
               ) : (
                 task.comments.map(comment => (
-                  <div key={comment.id} className="flex gap-3 text-sm">
-                     <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-medium text-xs border border-slate-200 shrink-0">
+                  <div key={comment.id} className="flex gap-3 text-sm group">
+                     <div className="w-8 h-8 rounded-full bg-white text-slate-500 flex items-center justify-center font-bold text-xs border border-slate-200 shrink-0 shadow-sm">
                       {comment.author.charAt(0)}
                     </div>
-                    <div className="space-y-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-medium text-slate-900">{comment.author}</span>
-                        <span className="text-xs text-slate-400">{comment.timestamp}</span>
+                    <div className="space-y-1.5 flex-1">
+                      <div className="flex items-baseline justify-between">
+                        <span className="font-semibold text-slate-900 text-xs">{comment.author}</span>
+                        <span className="text-[10px] text-slate-400 font-medium">{comment.timestamp}</span>
                       </div>
-                      <p className="text-slate-600 leading-relaxed">{comment.text}</p>
+                      <div className="bg-white p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border border-slate-100 shadow-sm text-slate-600 leading-relaxed">
+                        {comment.text}
+                      </div>
                     </div>
                   </div>
                 ))
               )}
             </div>
 
-            <form onSubmit={handleAddComment} className="flex gap-2">
-              <Input 
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Write a comment..."
-                className="flex-1 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500"
-              />
-              <Button type="submit" size="icon" disabled={!newComment.trim()} className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0">
-                <Send className="w-4 h-4" />
-              </Button>
-            </form>
+            <div className="p-4 bg-white border-t border-slate-200/60">
+              <form onSubmit={handleAddComment} className="relative">
+                <Input 
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Write a comment..."
+                  className="pr-10 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 py-5"
+                />
+                <Button 
+                  type="submit" 
+                  size="icon" 
+                  disabled={!newComment.trim()} 
+                  className="absolute right-1.5 top-1.5 h-7 w-7 bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 transition-all rounded-md"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </Button>
+              </form>
+            </div>
           </div>
-          
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2 pt-2">
-            {task.tags.map(tag => (
-              <span key={tag} className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-md border border-slate-200">
-                #{tag}
-              </span>
-            ))}
-          </div>
+
         </div>
       </DialogContent>
     </Dialog>
