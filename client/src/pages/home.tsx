@@ -203,7 +203,7 @@ export default function Home() {
       <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-[1800px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-indigo-200 shadow-lg">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -231,8 +231,8 @@ export default function Home() {
       </header>
 
       {/* Board */}
-      <main className="max-w-7xl mx-auto p-6 overflow-x-auto">
-        <div className="flex gap-6 min-w-[1000px]">
+      <main className="max-w-[1800px] mx-auto p-6 overflow-x-auto">
+        <div className="flex gap-6 min-w-[1200px]">
           {columns.map((status) => {
             const config = statusConfig[status];
             const columnTasks = tasks.filter(t => t.status === status);
