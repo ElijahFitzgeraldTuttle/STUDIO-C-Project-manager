@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Settings, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
@@ -8,6 +8,7 @@ import { dbTaskToTask, taskToDbTask, type Task, type Status, statusConfig } from
 import { useUser } from "@/contexts/UserContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState, useMemo } from "react";
+import { Link } from "wouter";
 import { DndContext, DragEndEvent, useDroppable, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -417,6 +418,18 @@ export default function Home() {
                 className="bg-transparent border-none outline-none placeholder:text-slate-400 w-48"
               />
             </div>
+            <Link href="/pending-payouts">
+              <button 
+                className={cn(
+                  "p-2 rounded-full transition-all hover:bg-slate-100",
+                  theme === "dark" ? "text-slate-400 hover:bg-slate-800" : "text-slate-500"
+                )}
+                title="Pending Payouts"
+                data-testid="button-pending-payouts"
+              >
+                <DollarSign className="w-5 h-5" />
+              </button>
+            </Link>
             <button 
               onClick={toggleGlassmorphism}
               className={cn(
