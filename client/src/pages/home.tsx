@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask } from "@/lib/api";
 import { dbTaskToTask, taskToDbTask, type Task, type Status, statusConfig } from "@/lib/types";
 import { useUser } from "@/contexts/UserContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useState, useMemo } from "react";
 import { DndContext, DragEndEvent, useDroppable, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
@@ -103,6 +104,7 @@ function DroppableColumn({ id, children, className }: { id: string; children: Re
 export default function Home() {
   const queryClient = useQueryClient();
   const { currentUser } = useUser();
+  const { theme, toggleGlassmorphism, toggleDarkMode } = useTheme();
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [newTaskStatus, setNewTaskStatus] = useState<Status>("prospect");
   const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -210,9 +212,39 @@ export default function Home() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
+      <div className={cn(
+        "min-h-screen font-sans transition-colors duration-500 relative overflow-hidden",
+        theme === "light" && "bg-slate-50/50 text-slate-900",
+        theme === "glassmorphism" && "text-slate-900",
+        theme === "dark" && "bg-slate-900 text-slate-100"
+      )}>
+        {/* Animated Gradient Background for Glassmorphism */}
+        {theme === "glassmorphism" && (
+          <div className="fixed inset-0 -z-10 overflow-hidden">
+            <div className="absolute top-0 -left-20 w-96 h-96 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+            <div className="absolute top-0 -right-20 w-96 h-96 bg-gradient-to-br from-cyan-400 to-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-20 left-1/3 w-96 h-96 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+          </div>
+        )}
+
+        {/* Dark Mode Background */}
+        {theme === "dark" && (
+          <div className="fixed inset-0 -z-10">
+            <img 
+              src="/dark-bg.jpg" 
+              alt="" 
+              className="w-full h-full object-cover opacity-50"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 via-slate-900/70 to-slate-900/90"></div>
+          </div>
+        )}
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-6 py-4">
+        <header className={cn(
+          "sticky top-0 z-10 backdrop-blur-md border-b px-6 py-4 transition-all",
+          theme === "light" && "bg-white/80 border-slate-200/60",
+          theme === "glassmorphism" && "bg-white/20 border-white/20 shadow-lg",
+          theme === "dark" && "bg-slate-900/80 border-slate-700/50"
+        )}>
         <div className="max-w-[1800px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-indigo-200 shadow-lg">
@@ -220,7 +252,10 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 font-heading">Project Flow</h1>
+            <h1 className={cn(
+              "text-xl font-bold tracking-tight font-heading",
+              theme === "dark" ? "text-white" : "text-slate-900"
+            )}>Project Flow</h1>
           </div>
 
           <div className="flex items-center gap-3">
@@ -232,6 +267,32 @@ export default function Home() {
                 className="bg-transparent border-none outline-none placeholder:text-slate-400 w-48"
               />
             </div>
+            <button 
+              onClick={toggleGlassmorphism}
+              className={cn(
+                "p-2 rounded-full transition-all",
+                theme === "glassmorphism" 
+                  ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg" 
+                  : "hover:bg-slate-100 text-slate-500"
+              )}
+              title="Toggle Glassmorphism"
+              data-testid="button-glassmorphism"
+            >
+              <Sparkles className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={toggleDarkMode}
+              className={cn(
+                "p-2 rounded-full transition-all",
+                theme === "dark" 
+                  ? "bg-slate-800 text-amber-400 shadow-lg" 
+                  : "hover:bg-slate-100 text-slate-500"
+              )}
+              title="Toggle Dark Mode"
+              data-testid="button-dark-mode"
+            >
+              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             <button className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors">
               <SlidersHorizontal className="w-5 h-5" />
             </button>
@@ -255,8 +316,14 @@ export default function Home() {
                     <div className={cn("p-1.5 rounded-md", config.bg)}>
                       <config.icon className={cn("w-4 h-4", config.color)} />
                     </div>
-                    <h2 className="font-semibold text-slate-700 text-sm">{config.label}</h2>
-                    <span className="bg-slate-100 text-slate-500 text-xs font-medium px-2 py-0.5 rounded-full">
+                    <h2 className={cn(
+                      "font-semibold text-sm",
+                      theme === "dark" ? "text-slate-200" : "text-slate-700"
+                    )}>{config.label}</h2>
+                    <span className={cn(
+                      "text-xs font-medium px-2 py-0.5 rounded-full",
+                      theme === "dark" ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500"
+                    )}>
                       {columnTasks.length}
                     </span>
                   </div>
@@ -269,11 +336,17 @@ export default function Home() {
                 <DroppableColumn
                   id={status}
                   className={cn(
-                    "flex-1 bg-slate-100/50 rounded-xl p-3 border border-slate-200/60 flex flex-col gap-3 min-h-[500px] transition-all",
-                    status === 'prospect' && "bg-slate-50/80",
-                    status === 'scheduled' && "bg-amber-50/30",
-                    status === 'in-progress' && "bg-blue-50/30",
-                    status === 'complete' && "bg-emerald-50/30"
+                    "flex-1 rounded-xl p-3 border flex flex-col gap-3 min-h-[500px] transition-all",
+                    // Light theme
+                    theme === "light" && "bg-slate-100/50 border-slate-200/60",
+                    theme === "light" && status === 'prospect' && "bg-slate-50/80",
+                    theme === "light" && status === 'scheduled' && "bg-amber-50/30",
+                    theme === "light" && status === 'in-progress' && "bg-blue-50/30",
+                    theme === "light" && status === 'complete' && "bg-emerald-50/30",
+                    // Glassmorphism theme
+                    theme === "glassmorphism" && "bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl",
+                    // Dark theme
+                    theme === "dark" && "bg-slate-800/30 backdrop-blur-md border-slate-700/50"
                   )}
                   data-testid={`column-${status}`}
                 >

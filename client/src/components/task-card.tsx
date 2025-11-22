@@ -26,6 +26,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchComments, createComment, markAllTaskCommentsAsRead, fetchSubtasks, createSubtask, updateSubtask, deleteSubtask, fetchPayout, createOrUpdatePayout, addPayee, updatePayee, deletePayee } from "@/lib/api";
 import { dbCommentToComment } from "@/lib/types";
 import { useUser } from "@/contexts/UserContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface TaskCardProps {
   task: Task;
@@ -43,6 +44,7 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
   const [newPayeeAmount, setNewPayeeAmount] = useState("");
   const queryClient = useQueryClient();
   const { currentUser } = useUser();
+  const { theme } = useTheme();
   
   const { data: dbComments = [] } = useQuery({
     queryKey: ["comments", task.id],
@@ -218,7 +220,12 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="group relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer text-left w-full"
+          className={cn(
+            "group relative p-4 rounded-xl border shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer text-left w-full",
+            theme === "light" && "bg-white border-slate-100",
+            theme === "glassmorphism" && "bg-white/30 backdrop-blur-md border-white/30 shadow-lg",
+            theme === "dark" && "bg-slate-800/50 backdrop-blur-sm border-slate-700/50"
+          )}
         >
           <div className="flex justify-between items-start gap-2 mb-1">
             <div className="flex items-start gap-2 flex-1 min-w-0">
@@ -235,7 +242,10 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                   <GripVertical className="w-4 h-4" />
                 </div>
               )}
-              <h3 className="text-sm font-semibold text-slate-800 leading-tight pt-1 flex-1 min-w-0">
+              <h3 className={cn(
+                "text-sm font-semibold leading-tight pt-1 flex-1 min-w-0",
+                theme === "dark" ? "text-slate-100" : "text-slate-800"
+              )}>
                 {task.title}
               </h3>
             </div>
@@ -263,13 +273,21 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
             </div>
           </div>
 
-          <p className="text-xs text-slate-500 line-clamp-2 mb-3">
+          <p className={cn(
+            "text-xs line-clamp-2 mb-3",
+            theme === "dark" ? "text-slate-300" : "text-slate-500"
+          )}>
             {task.description}
           </p>
 
           {/* Tracking Checkboxes */}
           <div 
-            className="grid grid-cols-2 gap-2 mb-3 bg-slate-50/50 p-2 rounded-lg border border-slate-100"
+            className={cn(
+              "grid grid-cols-2 gap-2 mb-3 p-2 rounded-lg border",
+              theme === "light" && "bg-slate-50/50 border-slate-100",
+              theme === "glassmorphism" && "bg-white/20 border-white/30",
+              theme === "dark" && "bg-slate-700/30 border-slate-600/50"
+            )}
             onClick={(e) => e.stopPropagation()}
           >
             {Object.entries(task.tracking).map(([key, value]) => (
@@ -282,7 +300,10 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                 />
                 <Label 
                   htmlFor={`tracking-${task.id}-${key}`}
-                  className="text-[10px] text-slate-600 capitalize cursor-pointer font-medium"
+                  className={cn(
+                    "text-[10px] capitalize cursor-pointer font-medium",
+                    theme === "dark" ? "text-slate-300" : "text-slate-600"
+                  )}
                 >
                   {key}
                 </Label>
@@ -294,7 +315,10 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
             <div className="flex items-center gap-2 flex-wrap">
               {task.assignees && task.assignees.length > 0 && (
                 task.assignees.map(assignee => (
-                  <div key={assignee} className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded-md">
+                  <div key={assignee} className={cn(
+                    "flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-md",
+                    theme === "dark" ? "bg-slate-700/50 text-slate-300" : "bg-slate-50 text-slate-500"
+                  )}>
                     <User className="w-3 h-3" />
                     <span>{assignee}</span>
                   </div>
@@ -322,11 +346,18 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
         </motion.div>
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+      <DialogContent className={cn(
+        "sm:max-w-[900px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0",
+        theme === "glassmorphism" && "bg-white/80 backdrop-blur-xl border-white/30",
+        theme === "dark" && "bg-slate-800 border-slate-700"
+      )}>
         <div className="grid grid-cols-1 md:grid-cols-5 h-full max-h-[80vh]">
           
           {/* Left Column: Task Details */}
-          <div className="md:col-span-3 p-6 overflow-y-auto border-r border-slate-100">
+          <div className={cn(
+            "md:col-span-3 p-6 overflow-y-auto border-r",
+            theme === "dark" ? "border-slate-700" : "border-slate-100"
+          )}>
             <DialogHeader className="mb-6">
               <div className="flex items-center gap-3 mb-2">
                 <div className={cn("p-2 rounded-lg", statusConfig[task.status].bg)}>
@@ -340,8 +371,14 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                   {statusConfig[task.status].label}
                 </div>
               </div>
-              <DialogTitle className="text-xl leading-snug">{task.title}</DialogTitle>
-              <DialogDescription className="text-slate-500 pt-2">
+              <DialogTitle className={cn(
+                "text-xl leading-snug",
+                theme === "dark" && "text-slate-100"
+              )}>{task.title}</DialogTitle>
+              <DialogDescription className={cn(
+                "pt-2",
+                theme === "dark" ? "text-slate-300" : "text-slate-500"
+              )}>
                 {task.description}
               </DialogDescription>
             </DialogHeader>
@@ -349,23 +386,43 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
             <div className="space-y-6">
               {/* Subtasks Section */}
               <div className="space-y-3">
-                <h4 className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                  <ListTodo className="w-4 h-4 text-slate-500" />
+                <h4 className={cn(
+                  "text-sm font-medium flex items-center gap-2",
+                  theme === "dark" ? "text-slate-100" : "text-slate-900"
+                )}>
+                  <ListTodo className={cn("w-4 h-4", theme === "dark" ? "text-slate-400" : "text-slate-500")} />
                   Subtasks
-                  <span className="text-xs text-slate-500 font-normal">
+                  <span className={cn(
+                    "text-xs font-normal",
+                    theme === "dark" ? "text-slate-400" : "text-slate-500"
+                  )}>
                     ({subtasks.filter(s => s.completed).length}/{subtasks.length})
                   </span>
                 </h4>
-                <div className="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className={cn(
+                  "space-y-2 p-4 rounded-xl border",
+                  theme === "light" && "bg-slate-50 border-slate-100",
+                  theme === "glassmorphism" && "bg-white/30 border-white/30",
+                  theme === "dark" && "bg-slate-700/30 border-slate-600/50"
+                )}>
                   {subtasks.map(subtask => (
-                    <div key={subtask.id} className="flex items-center gap-3 p-2 hover:bg-white rounded-lg transition-colors group">
+                    <div key={subtask.id} className={cn(
+                      "flex items-center gap-3 p-2 rounded-lg transition-colors group",
+                      theme === "light" && "hover:bg-white",
+                      theme === "glassmorphism" && "hover:bg-white/50",
+                      theme === "dark" && "hover:bg-slate-600/30"
+                    )}>
                       <Checkbox 
                         checked={subtask.completed}
                         onCheckedChange={(checked) => toggleSubtaskMutation.mutate({ id: subtask.id, completed: checked === true })}
                         className="h-5 w-5 rounded-md border-slate-300"
                         data-testid={`checkbox-subtask-${subtask.id}`}
                       />
-                      <span className={cn("flex-1 text-sm", subtask.completed && "line-through text-slate-400")}>
+                      <span className={cn(
+                        "flex-1 text-sm",
+                        subtask.completed && "line-through text-slate-400",
+                        !subtask.completed && theme === "dark" && "text-slate-200"
+                      )}>
                         {subtask.title}
                       </span>
                       <Button
@@ -401,13 +458,24 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
 
               {/* Payouts Section */}
               <div className="space-y-3">
-                <h4 className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-slate-500" />
+                <h4 className={cn(
+                  "text-sm font-medium flex items-center gap-2",
+                  theme === "dark" ? "text-slate-100" : "text-slate-900"
+                )}>
+                  <DollarSign className={cn("w-4 h-4", theme === "dark" ? "text-slate-400" : "text-slate-500")} />
                   Payouts
                 </h4>
-                <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className={cn(
+                  "space-y-3 p-4 rounded-xl border",
+                  theme === "light" && "bg-slate-50 border-slate-100",
+                  theme === "glassmorphism" && "bg-white/30 border-white/30",
+                  theme === "dark" && "bg-slate-700/30 border-slate-600/50"
+                )}>
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-600">Total Amount</Label>
+                    <Label className={cn(
+                      "text-xs",
+                      theme === "dark" ? "text-slate-300" : "text-slate-600"
+                    )}>Total Amount</Label>
                     <div className="flex gap-2">
                       <Input 
                         type="number"
@@ -423,11 +491,25 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
 
                   {payoutData && payoutData.payees.length > 0 && (
                     <div className="space-y-2">
-                      <Label className="text-xs text-slate-600">Payees</Label>
+                      <Label className={cn(
+                        "text-xs",
+                        theme === "dark" ? "text-slate-300" : "text-slate-600"
+                      )}>Payees</Label>
                       {payoutData.payees.map(payee => (
-                        <div key={payee.id} className="flex items-center gap-2 p-2 bg-white rounded-lg group">
-                          <span className="flex-1 text-sm font-medium text-slate-700">{payee.name}</span>
-                          <span className="text-sm text-slate-600">${payee.amount}</span>
+                        <div key={payee.id} className={cn(
+                          "flex items-center gap-2 p-2 rounded-lg group",
+                          theme === "light" && "bg-white",
+                          theme === "glassmorphism" && "bg-white/50",
+                          theme === "dark" && "bg-slate-600/30"
+                        )}>
+                          <span className={cn(
+                            "flex-1 text-sm font-medium",
+                            theme === "dark" ? "text-slate-200" : "text-slate-700"
+                          )}>{payee.name}</span>
+                          <span className={cn(
+                            "text-sm",
+                            theme === "dark" ? "text-slate-300" : "text-slate-600"
+                          )}>${payee.amount}</span>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -471,9 +553,15 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                   </form>
 
                   {payoutData && (
-                    <div className="pt-2 border-t border-slate-200">
+                    <div className={cn(
+                      "pt-2 border-t",
+                      theme === "dark" ? "border-slate-600" : "border-slate-200"
+                    )}>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-slate-700">Remaining</span>
+                        <span className={cn(
+                          "text-sm font-medium",
+                          theme === "dark" ? "text-slate-200" : "text-slate-700"
+                        )}>Remaining</span>
                         <span className={cn(
                           "text-sm font-bold",
                           remaining < 0 ? "text-red-600" : remaining > 0 ? "text-indigo-600" : "text-emerald-600"
@@ -488,13 +576,26 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
 
               {/* Tracking Section */}
               <div className="space-y-3">
-                <h4 className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-slate-500" />
+                <h4 className={cn(
+                  "text-sm font-medium flex items-center gap-2",
+                  theme === "dark" ? "text-slate-100" : "text-slate-900"
+                )}>
+                  <CheckCircle2 className={cn("w-4 h-4", theme === "dark" ? "text-slate-400" : "text-slate-500")} />
                   Project Tracking
                 </h4>
-                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className={cn(
+                  "grid grid-cols-2 gap-3 p-4 rounded-xl border",
+                  theme === "light" && "bg-slate-50 border-slate-100",
+                  theme === "glassmorphism" && "bg-white/30 border-white/30",
+                  theme === "dark" && "bg-slate-700/30 border-slate-600/50"
+                )}>
                   {Object.entries(task.tracking).map(([key, value]) => (
-                    <div key={key} className="flex items-center gap-3 p-2 hover:bg-white rounded-lg transition-colors">
+                    <div key={key} className={cn(
+                      "flex items-center gap-3 p-2 rounded-lg transition-colors",
+                      theme === "light" && "hover:bg-white",
+                      theme === "glassmorphism" && "hover:bg-white/50",
+                      theme === "dark" && "hover:bg-slate-600/30"
+                    )}>
                       <Checkbox 
                         id={`modal-tracking-${task.id}-${key}`} 
                         checked={value}
@@ -503,7 +604,10 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                       />
                       <Label 
                         htmlFor={`modal-tracking-${task.id}-${key}`}
-                        className="text-sm text-slate-700 capitalize cursor-pointer font-medium select-none"
+                        className={cn(
+                          "text-sm capitalize cursor-pointer font-medium select-none",
+                          theme === "dark" ? "text-slate-200" : "text-slate-700"
+                        )}
                       >
                         {key}
                       </Label>
@@ -513,14 +617,27 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
               </div>
 
               {/* Assignee Section */}
-              <div className="space-y-1.5 p-4 rounded-lg border border-slate-100 bg-white">
-                <div className="flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-wide mb-2">
+              <div className={cn(
+                "space-y-1.5 p-4 rounded-lg border",
+                theme === "light" && "bg-white border-slate-100",
+                theme === "glassmorphism" && "bg-white/30 border-white/30",
+                theme === "dark" && "bg-slate-700/30 border-slate-600/50"
+              )}>
+                <div className={cn(
+                  "flex items-center gap-2 text-xs font-medium uppercase tracking-wide mb-2",
+                  theme === "dark" ? "text-slate-400" : "text-slate-500"
+                )}>
                   <User className="w-3.5 h-3.5" />
                   Assignees
                 </div>
                 <div className="space-y-2">
                   {AVAILABLE_USERS.map(user => (
-                    <div key={user} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                    <div key={user} className={cn(
+                      "flex items-center gap-3 p-2 rounded-lg transition-colors",
+                      theme === "light" && "hover:bg-slate-50",
+                      theme === "glassmorphism" && "hover:bg-white/50",
+                      theme === "dark" && "hover:bg-slate-600/30"
+                    )}>
                       <Checkbox
                         id={`assignee-${task.id}-${user}`}
                         checked={task.assignees?.includes(user) || false}
@@ -530,7 +647,10 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                       />
                       <Label
                         htmlFor={`assignee-${task.id}-${user}`}
-                        className="text-sm text-slate-700 cursor-pointer font-medium select-none flex items-center gap-2"
+                        className={cn(
+                          "text-sm cursor-pointer font-medium select-none flex items-center gap-2",
+                          theme === "dark" ? "text-slate-200" : "text-slate-700"
+                        )}
                       >
                         <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs border border-indigo-200">
                           {user.charAt(0).toUpperCase()}
@@ -545,7 +665,12 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
               {/* Tags */}
               <div className="flex flex-wrap gap-2 pt-2">
                 {task.tags.map(tag => (
-                  <span key={tag} className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-md border border-slate-200">
+                  <span key={tag} className={cn(
+                    "px-2.5 py-1 text-xs font-medium rounded-md border",
+                    theme === "light" && "bg-slate-100 text-slate-600 border-slate-200",
+                    theme === "glassmorphism" && "bg-white/30 text-slate-700 border-white/30",
+                    theme === "dark" && "bg-slate-700/50 text-slate-300 border-slate-600"
+                  )}>
                     #{tag}
                   </span>
                 ))}
@@ -554,9 +679,22 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
           </div>
 
           {/* Right Column: Comments Bubble */}
-          <div className="md:col-span-2 bg-slate-50/50 flex flex-col h-full max-h-[80vh]">
-            <div className="p-4 border-b border-slate-200/60 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
-              <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+          <div className={cn(
+            "md:col-span-2 flex flex-col h-full max-h-[80vh]",
+            theme === "light" && "bg-slate-50/50",
+            theme === "glassmorphism" && "bg-white/20",
+            theme === "dark" && "bg-slate-900/30"
+          )}>
+            <div className={cn(
+              "p-4 border-b backdrop-blur-sm sticky top-0 z-10",
+              theme === "light" && "border-slate-200/60 bg-white/50",
+              theme === "glassmorphism" && "border-white/30 bg-white/30",
+              theme === "dark" && "border-slate-700/50 bg-slate-800/50"
+            )}>
+              <h4 className={cn(
+                "text-sm font-semibold flex items-center gap-2",
+                theme === "dark" ? "text-slate-100" : "text-slate-900"
+              )}>
                 <MessageSquare className="w-4 h-4 text-indigo-500" />
                 Comments
               </h4>
@@ -564,22 +702,41 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
             
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {comments.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-slate-400 p-8 text-center">
+                <div className={cn(
+                  "h-full flex flex-col items-center justify-center p-8 text-center",
+                  theme === "dark" ? "text-slate-500" : "text-slate-400"
+                )}>
                   <MessageSquare className="w-8 h-8 mb-2 opacity-20" />
                   <p className="text-sm">No comments yet.<br/>Start the conversation!</p>
                 </div>
               ) : (
                 comments.map(comment => (
                   <div key={comment.id} className="flex gap-3 text-sm group">
-                     <div className="w-8 h-8 rounded-full bg-white text-slate-500 flex items-center justify-center font-bold text-xs border border-slate-200 shrink-0 shadow-sm">
+                     <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border shrink-0 shadow-sm",
+                      theme === "light" && "bg-white text-slate-500 border-slate-200",
+                      theme === "glassmorphism" && "bg-white/50 text-slate-600 border-white/30",
+                      theme === "dark" && "bg-slate-700 text-slate-300 border-slate-600"
+                    )}>
                       {comment.author.charAt(0)}
                     </div>
                     <div className="space-y-1.5 flex-1">
                       <div className="flex items-baseline justify-between">
-                        <span className="font-semibold text-slate-900 text-xs">{comment.author}</span>
-                        <span className="text-[10px] text-slate-400 font-medium">{comment.timestamp}</span>
+                        <span className={cn(
+                          "font-semibold text-xs",
+                          theme === "dark" ? "text-slate-200" : "text-slate-900"
+                        )}>{comment.author}</span>
+                        <span className={cn(
+                          "text-[10px] font-medium",
+                          theme === "dark" ? "text-slate-500" : "text-slate-400"
+                        )}>{comment.timestamp}</span>
                       </div>
-                      <div className="bg-white p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border border-slate-100 shadow-sm text-slate-600 leading-relaxed">
+                      <div className={cn(
+                        "p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border shadow-sm leading-relaxed",
+                        theme === "light" && "bg-white border-slate-100 text-slate-600",
+                        theme === "glassmorphism" && "bg-white/60 border-white/30 text-slate-700",
+                        theme === "dark" && "bg-slate-700/50 border-slate-600 text-slate-300"
+                      )}>
                         {comment.text}
                       </div>
                     </div>
@@ -588,13 +745,23 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
               )}
             </div>
 
-            <div className="p-4 bg-white border-t border-slate-200/60">
+            <div className={cn(
+              "p-4 border-t",
+              theme === "light" && "bg-white border-slate-200/60",
+              theme === "glassmorphism" && "bg-white/30 border-white/30",
+              theme === "dark" && "bg-slate-800/50 border-slate-700/50"
+            )}>
               <form onSubmit={handleAddComment} className="relative">
                 <Input 
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Write a comment..."
-                  className="pr-10 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 py-5"
+                  className={cn(
+                    "pr-10 border focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 py-5",
+                    theme === "light" && "bg-slate-50 border-slate-200",
+                    theme === "glassmorphism" && "bg-white/50 border-white/30",
+                    theme === "dark" && "bg-slate-700/50 border-slate-600 text-slate-100"
+                  )}
                 />
                 <Button 
                   type="submit" 
