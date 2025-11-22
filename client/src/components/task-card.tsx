@@ -37,11 +37,13 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
       exit={{ opacity: 0, scale: 0.95 }}
       className="group relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 cursor-default"
     >
-      <div className="flex justify-between items-start mb-2">
-        <div /> {/* Spacer for removed priority */}
+      <div className="flex justify-between items-start gap-2 mb-1">
+        <h3 className="text-sm font-semibold text-slate-800 leading-tight pt-1">
+          {task.title}
+        </h3>
         
         <DropdownMenu>
-          <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded-md outline-none ml-auto">
+          <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded-md outline-none shrink-0 -mr-1 -mt-1">
             <MoreHorizontal className="w-4 h-4 text-slate-400" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -61,9 +63,6 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
         </DropdownMenu>
       </div>
 
-      <h3 className="text-sm font-semibold text-slate-800 mb-1 leading-tight">
-        {task.title}
-      </h3>
       <p className="text-xs text-slate-500 line-clamp-2 mb-3">
         {task.description}
       </p>
