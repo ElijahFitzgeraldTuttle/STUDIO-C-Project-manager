@@ -1,4 +1,4 @@
-import { Task, priorityConfig, statusConfig, TaskTracking } from "@/lib/mock-data";
+import { Task, statusConfig, TaskTracking } from "@/lib/mock-data";
 import { Calendar, MoreHorizontal, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -38,28 +38,24 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
       className="group relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 cursor-default"
     >
       <div className="flex justify-between items-start mb-2">
-        <span
-          className={cn(
-            "text-[10px] font-medium uppercase tracking-wider px-2 py-1 rounded-full",
-            priorityConfig[task.priority].color
-          )}
-        >
-          {task.priority}
-        </span>
+        <div /> {/* Spacer for removed priority */}
         
         <DropdownMenu>
-          <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded-md outline-none">
+          <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded-md outline-none ml-auto">
             <MoreHorizontal className="w-4 h-4 text-slate-400" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onUpdate({ ...task, status: "todo" })}>
-              Move to To Do
+            <DropdownMenuItem onClick={() => onUpdate({ ...task, status: "prospect" })}>
+              Move to Prospect
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onUpdate({ ...task, status: "scheduled" })}>
+              Move to Scheduled
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onUpdate({ ...task, status: "in-progress" })}>
               Move to In Progress
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onUpdate({ ...task, status: "done" })}>
-              Move to Done
+            <DropdownMenuItem onClick={() => onUpdate({ ...task, status: "complete" })}>
+              Move to Complete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -104,7 +100,7 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
         
         {task.dueDate && (
           <div className={cn("flex items-center gap-1 text-xs", 
-            task.status === 'done' ? "text-slate-400" : "text-orange-600/80"
+            task.status === 'complete' ? "text-slate-400" : "text-orange-600/80"
           )}>
             <Calendar className="w-3 h-3" />
             <span>{task.dueDate}</span>

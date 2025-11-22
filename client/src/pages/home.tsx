@@ -12,7 +12,7 @@ export default function Home() {
     setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
   };
 
-  const columns: Status[] = ["todo", "in-progress", "done"];
+  const columns: Status[] = ["prospect", "scheduled", "in-progress", "complete"];
 
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
@@ -76,9 +76,10 @@ export default function Home() {
                 <div className={cn(
                   "flex-1 bg-slate-100/50 rounded-xl p-3 border border-slate-200/60 flex flex-col gap-3 min-h-[500px]",
                   // Add distinct background tint per column for better visual separation
-                  status === 'todo' && "bg-slate-50/80",
+                  status === 'prospect' && "bg-slate-50/80",
+                  status === 'scheduled' && "bg-amber-50/30",
                   status === 'in-progress' && "bg-blue-50/30",
-                  status === 'done' && "bg-emerald-50/30"
+                  status === 'complete' && "bg-emerald-50/30"
                 )}>
                   <AnimatePresence mode="popLayout">
                     {columnTasks.map((task) => (
