@@ -1,4 +1,4 @@
-import type { Task, Comment, InsertTask, InsertComment, Subtask, InsertSubtask, Payout, Payee, InsertPayee, Dashboard, InsertDashboard } from "@shared/schema";
+import type { Task, Comment, InsertTask, InsertComment, Subtask, InsertSubtask, Payout, Payee, InsertPayee, Dashboard, InsertDashboard, Column, InsertColumn } from "@shared/schema";
 
 const API_BASE = "/api";
 
@@ -176,4 +176,37 @@ export async function deleteDashboard(id: number): Promise<void> {
     method: "DELETE",
   });
   if (!response.ok) throw new Error("Failed to delete dashboard");
+}
+
+export async function fetchColumns(dashboardId: number): Promise<Column[]> {
+  const response = await fetch(`${API_BASE}/dashboards/${dashboardId}/columns`);
+  if (!response.ok) throw new Error("Failed to fetch columns");
+  return response.json();
+}
+
+export async function createColumn(dashboardId: number, column: Omit<InsertColumn, "dashboardId">): Promise<Column> {
+  const response = await fetch(`${API_BASE}/dashboards/${dashboardId}/columns`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(column),
+  });
+  if (!response.ok) throw new Error("Failed to create column");
+  return response.json();
+}
+
+export async function updateColumn(id: number, column: Partial<InsertColumn>): Promise<Column> {
+  const response = await fetch(`${API_BASE}/columns/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(column),
+  });
+  if (!response.ok) throw new Error("Failed to update column");
+  return response.json();
+}
+
+export async function deleteColumn(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE}/columns/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete column");
 }
