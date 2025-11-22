@@ -480,14 +480,10 @@ export default function Home() {
       <main className="max-w-[1800px] mx-auto p-6 overflow-x-auto">
         <div className="flex gap-6 min-w-[1200px]">
           {columns.map((column) => {
-            const columnStatus = column.name as Status;
-            const config = statusConfig[columnStatus] || { 
-              label: column.name, 
-              color: "text-slate-600", 
-              bg: "bg-slate-100", 
-              icon: SlidersHorizontal 
-            };
+            // Use column name directly, fallback to statusConfig for icon only
             const columnTasks = tasks.filter(t => t.status === column.name);
+            const defaultConfig = statusConfig[column.name as Status];
+            const Icon = defaultConfig?.icon || SlidersHorizontal;
             
             return (
               <div key={column.id} className="flex-1 min-w-[300px] flex flex-col h-full">
@@ -495,10 +491,10 @@ export default function Home() {
                 <div className="flex items-center justify-between mb-4 px-1">
                   <div className="flex items-center gap-2">
                     <div className={cn("p-1.5 rounded-md")} style={{ backgroundColor: column.color }}>
-                      <config.icon className={cn("w-4 h-4", config.color)} />
+                      <Icon className={cn("w-4 h-4", defaultConfig?.color || "text-slate-600")} />
                     </div>
                     <h2 className={cn(
-                      "font-semibold text-sm",
+                      "font-semibold text-sm capitalize",
                       theme === "dark" ? "text-slate-200" : "text-slate-700"
                     )}>{column.name}</h2>
                     <span className={cn(
@@ -567,7 +563,7 @@ export default function Home() {
                       <DialogHeader>
                         <DialogTitle>Create New Task</DialogTitle>
                         <DialogDescription>
-                          Add a new task to {config.label}
+                          Add a new task to {column.name}
                         </DialogDescription>
                       </DialogHeader>
                       <form onSubmit={handleCreateTask} className="space-y-4">
