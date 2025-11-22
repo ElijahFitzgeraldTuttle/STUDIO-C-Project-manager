@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask } from "@/lib/api";
 import { dbTaskToTask, taskToDbTask, type Task, type Status, statusConfig } from "@/lib/types";
 import { useUser } from "@/contexts/UserContext";
-import { useState } from "react";
-import { DndContext, DragEndEvent, useDroppable } from "@dnd-kit/core";
+import { useState, useMemo } from "react";
+import { DndContext, DragEndEvent, useDroppable, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -74,11 +74,12 @@ function DraggableTask({ task, unreadCount, onUpdate }: { task: Task; unreadCoun
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} {...attributes}>
       <TaskCard 
         task={task} 
         onUpdate={onUpdate}
         unreadCount={unreadCount}
+        dragHandleProps={listeners}
       />
     </div>
   );
@@ -107,6 +108,14 @@ export default function Home() {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 10,
+      },
+    })
+  );
 
   const { data: dbTasks = [], isLoading } = useQuery({
     queryKey: ["tasks"],
@@ -197,6 +206,7 @@ export default function Home() {
 
   return (
     <DndContext
+      sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >

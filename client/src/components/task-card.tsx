@@ -1,6 +1,6 @@
 import { type Task, type TaskTracking, type Comment, statusConfig } from "@/lib/types";
 import type { Subtask, Payout, Payee } from "@shared/schema";
-import { MoreHorizontal, User, CheckCircle2, MessageSquare, Send, Bell, ListTodo, X, Plus, DollarSign, Trash2 } from "lucide-react";
+import { MoreHorizontal, User, CheckCircle2, MessageSquare, Send, Bell, ListTodo, X, Plus, DollarSign, Trash2, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,9 +31,10 @@ interface TaskCardProps {
   task: Task;
   onUpdate: (task: Task) => void;
   unreadCount?: number;
+  dragHandleProps?: any;
 }
 
-export function TaskCard({ task, onUpdate, unreadCount = 0 }: TaskCardProps) {
+export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: TaskCardProps) {
   const [newComment, setNewComment] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
@@ -220,9 +221,24 @@ export function TaskCard({ task, onUpdate, unreadCount = 0 }: TaskCardProps) {
           className="group relative bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer text-left w-full"
         >
           <div className="flex justify-between items-start gap-2 mb-1">
-            <h3 className="text-sm font-semibold text-slate-800 leading-tight pt-1">
-              {task.title}
-            </h3>
+            <div className="flex items-start gap-2 flex-1 min-w-0">
+              {dragHandleProps && (
+                <div 
+                  {...dragHandleProps}
+                  className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 transition-colors shrink-0 pt-1"
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label="Drag to move task"
+                  title="Drag to move task"
+                  role="button"
+                  tabIndex={0}
+                >
+                  <GripVertical className="w-4 h-4" />
+                </div>
+              )}
+              <h3 className="text-sm font-semibold text-slate-800 leading-tight pt-1 flex-1 min-w-0">
+                {task.title}
+              </h3>
+            </div>
             
             <div onClick={(e) => e.stopPropagation()}>
               <DropdownMenu>
