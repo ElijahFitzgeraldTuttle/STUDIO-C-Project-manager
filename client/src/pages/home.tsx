@@ -375,7 +375,7 @@ export default function Home() {
         "min-h-screen font-sans transition-colors duration-500 relative overflow-hidden",
         theme === "light" && "bg-slate-50/50 text-slate-900",
         theme === "glassmorphism" && "text-slate-900",
-        theme === "dark" && "bg-slate-900 text-slate-100"
+        theme === "dark" && "bg-transparent text-slate-100"
       )}>
         {/* Animated Gradient Background for Glassmorphism */}
         {theme === "glassmorphism" && (
@@ -390,10 +390,10 @@ export default function Home() {
         {theme === "dark" && (
           <div key="dark-bg" className="fixed inset-0 -z-10">
             <div 
-              className="w-full h-full bg-cover bg-center opacity-50"
+              className="w-full h-full bg-cover bg-center"
               style={{ backgroundImage: 'url(/dark-bg.jpg)' }}
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 via-slate-900/70 to-slate-900/90"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 via-slate-900/20 to-slate-900/30"></div>
           </div>
         )}
         {/* Header */}
