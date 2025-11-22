@@ -26,6 +26,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -494,17 +505,36 @@ export default function Home() {
               >
                 <span className="flex-1">{dashboard.name}</span>
                 {currentDashboardId === dashboard.id && dashboards.length > 1 && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteDashboardMutation.mutate(dashboard.id);
-                    }}
-                    className="inline-flex items-center justify-center w-4 h-4 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-opacity"
-                    data-testid={`button-delete-dashboard-${dashboard.id}`}
-                    title="Delete dashboard"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center justify-center w-4 h-4 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-opacity"
+                        data-testid={`button-delete-dashboard-${dashboard.id}`}
+                        title="Delete dashboard"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Dashboard?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{dashboard.name}"? All tasks and columns in this dashboard will be permanently deleted. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel data-testid="button-cancel-delete-dashboard">Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteDashboardMutation.mutate(dashboard.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                          data-testid="button-confirm-delete-dashboard"
+                        >
+                          Delete Dashboard
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 )}
               </div>
             )
