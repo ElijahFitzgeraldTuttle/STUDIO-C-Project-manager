@@ -66,6 +66,15 @@ export const dashboards = pgTable("dashboards", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const columns = pgTable("columns", {
+  id: serial("id").primaryKey(),
+  dashboardId: integer("dashboard_id").notNull().references(() => dashboards.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  color: text("color").notNull().default("#f1f5f9"),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -104,6 +113,11 @@ export const insertDashboardSchema = createInsertSchema(dashboards).omit({
   createdAt: true,
 });
 
+export const insertColumnSchema = createInsertSchema(columns).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
@@ -120,3 +134,5 @@ export type InsertPayee = z.infer<typeof insertPayeeSchema>;
 export type Payee = typeof payees.$inferSelect;
 export type InsertDashboard = z.infer<typeof insertDashboardSchema>;
 export type Dashboard = typeof dashboards.$inferSelect;
+export type InsertColumn = z.infer<typeof insertColumnSchema>;
+export type Column = typeof columns.$inferSelect;
