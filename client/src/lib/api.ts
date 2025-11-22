@@ -1,9 +1,10 @@
-import type { Task, Comment, InsertTask, InsertComment, Subtask, InsertSubtask, Payout, Payee, InsertPayee } from "@shared/schema";
+import type { Task, Comment, InsertTask, InsertComment, Subtask, InsertSubtask, Payout, Payee, InsertPayee, Dashboard, InsertDashboard } from "@shared/schema";
 
 const API_BASE = "/api";
 
-export async function fetchTasks(): Promise<Task[]> {
-  const response = await fetch(`${API_BASE}/tasks`);
+export async function fetchTasks(dashboardId?: number | null): Promise<Task[]> {
+  const url = dashboardId ? `${API_BASE}/tasks?dashboardId=${dashboardId}` : `${API_BASE}/tasks`;
+  const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to fetch tasks");
   return response.json();
 }
@@ -142,4 +143,27 @@ export async function deletePayee(id: number): Promise<void> {
     method: "DELETE",
   });
   if (!response.ok) throw new Error("Failed to delete payee");
+}
+
+export async function fetchDashboards(): Promise<Dashboard[]> {
+  const response = await fetch(`${API_BASE}/dashboards`);
+  if (!response.ok) throw new Error("Failed to fetch dashboards");
+  return response.json();
+}
+
+export async function createDashboard(dashboard: InsertDashboard): Promise<Dashboard> {
+  const response = await fetch(`${API_BASE}/dashboards`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dashboard),
+  });
+  if (!response.ok) throw new Error("Failed to create dashboard");
+  return response.json();
+}
+
+export async function deleteDashboard(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE}/dashboards/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete dashboard");
 }

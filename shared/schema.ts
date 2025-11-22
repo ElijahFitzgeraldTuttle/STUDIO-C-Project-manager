@@ -20,6 +20,7 @@ export const tasks = pgTable("tasks", {
   invoicedTracking: boolean("invoiced_tracking").notNull().default(false),
   paidTracking: boolean("paid_tracking").notNull().default(false),
   distributedTracking: boolean("distributed_tracking").notNull().default(false),
+  dashboardId: integer("dashboard_id").references(() => dashboards.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

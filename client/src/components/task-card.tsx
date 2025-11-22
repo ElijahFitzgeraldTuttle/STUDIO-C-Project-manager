@@ -347,7 +347,7 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
       </DialogTrigger>
       
       <DialogContent className={cn(
-        "sm:max-w-[900px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0",
+        "sm:max-w-[1100px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0",
         theme === "glassmorphism" && "bg-white/80 backdrop-blur-xl border-white/30",
         theme === "dark" && "bg-slate-800 border-slate-700"
       )}>
@@ -372,11 +372,11 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                 </div>
               </div>
               <DialogTitle className={cn(
-                "text-xl leading-snug",
+                "text-lg leading-snug",
                 theme === "dark" && "text-slate-100"
               )}>{task.title}</DialogTitle>
               <DialogDescription className={cn(
-                "pt-2",
+                "pt-1.5 text-xs",
                 theme === "dark" ? "text-slate-300" : "text-slate-500"
               )}>
                 {task.description}
@@ -387,13 +387,13 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
               {/* Subtasks Section */}
               <div className="space-y-3">
                 <h4 className={cn(
-                  "text-sm font-medium flex items-center gap-2",
+                  "text-xs font-semibold flex items-center gap-2",
                   theme === "dark" ? "text-slate-100" : "text-slate-900"
                 )}>
-                  <ListTodo className={cn("w-4 h-4", theme === "dark" ? "text-slate-400" : "text-slate-500")} />
+                  <ListTodo className={cn("w-3.5 h-3.5", theme === "dark" ? "text-slate-400" : "text-slate-500")} />
                   Subtasks
                   <span className={cn(
-                    "text-xs font-normal",
+                    "text-[10px] font-normal",
                     theme === "dark" ? "text-slate-400" : "text-slate-500"
                   )}>
                     ({subtasks.filter(s => s.completed).length}/{subtasks.length})
@@ -459,10 +459,10 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
               {/* Payouts Section */}
               <div className="space-y-3">
                 <h4 className={cn(
-                  "text-sm font-medium flex items-center gap-2",
+                  "text-xs font-semibold flex items-center gap-2",
                   theme === "dark" ? "text-slate-100" : "text-slate-900"
                 )}>
-                  <DollarSign className={cn("w-4 h-4", theme === "dark" ? "text-slate-400" : "text-slate-500")} />
+                  <DollarSign className={cn("w-3.5 h-3.5", theme === "dark" ? "text-slate-400" : "text-slate-500")} />
                   Payouts
                 </h4>
                 <div className={cn(
@@ -577,10 +577,10 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
               {/* Tracking Section */}
               <div className="space-y-3">
                 <h4 className={cn(
-                  "text-sm font-medium flex items-center gap-2",
+                  "text-xs font-semibold flex items-center gap-2",
                   theme === "dark" ? "text-slate-100" : "text-slate-900"
                 )}>
-                  <CheckCircle2 className={cn("w-4 h-4", theme === "dark" ? "text-slate-400" : "text-slate-500")} />
+                  <CheckCircle2 className={cn("w-3.5 h-3.5", theme === "dark" ? "text-slate-400" : "text-slate-500")} />
                   Project Tracking
                 </h4>
                 <div className={cn(

@@ -1,10 +1,10 @@
 import { db } from "../db";
-import { tasks, comments, commentReads, subtasks, payouts, payees, type Task, type InsertTask, type Comment, type InsertComment, type InsertCommentRead, type Subtask, type InsertSubtask, type Payout, type InsertPayout, type Payee, type InsertPayee } from "@shared/schema";
+import { tasks, comments, commentReads, subtasks, payouts, payees, dashboards, type Task, type InsertTask, type Comment, type InsertComment, type InsertCommentRead, type Subtask, type InsertSubtask, type Payout, type InsertPayout, type Payee, type InsertPayee, type Dashboard, type InsertDashboard } from "@shared/schema";
 import { eq, and, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // Task operations
-  getTasks(): Promise<Task[]>;
+  getTasks(dashboardId?: number | null): Promise<Task[]>;
   getTask(id: number): Promise<Task | undefined>;
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined>;
@@ -31,10 +31,18 @@ export interface IStorage {
   addPayee(payoutId: number, payee: Omit<InsertPayee, "payoutId">): Promise<Payee>;
   updatePayee(id: number, payee: Partial<Omit<InsertPayee, "payoutId">>): Promise<Payee | undefined>;
   deletePayee(id: number): Promise<void>;
+
+  // Dashboard operations
+  getDashboards(): Promise<Dashboard[]>;
+  createDashboard(dashboard: InsertDashboard): Promise<Dashboard>;
+  deleteDashboard(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
-  async getTasks(): Promise<Task[]> {
+  async getTasks(dashboardId?: number | null): Promise<Task[]> {
+    if (dashboardId !== undefined) {
+      return await db.select().from(tasks).where(eq(tasks.dashboardId, dashboardId)).orderBy(tasks.createdAt);
+    }
     return await db.select().from(tasks).orderBy(tasks.createdAt);
   }
 
@@ -245,6 +253,19 @@ export class DatabaseStorage implements IStorage {
 
   async deletePayee(id: number): Promise<void> {
     await db.delete(payees).where(eq(payees.id, id));
+  }
+
+  async getDashboards(): Promise<Dashboard[]> {
+    return await db.select().from(dashboards).orderBy(dashboards.createdAt);
+  }
+
+  async createDashboard(insertDashboard: InsertDashboard): Promise<Dashboard> {
+    const result = await db.insert(dashboards).values(insertDashboard).returning();
+    return result[0];
+  }
+
+  async deleteDashboard(id: number): Promise<void> {
+    await db.delete(dashboards).where(eq(dashboards.id, id));
   }
 }
 

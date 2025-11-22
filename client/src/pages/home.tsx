@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { fetchTasks, updateTask, getUnreadCounts, createTask } from "@/lib/api";
+import { fetchTasks, updateTask, getUnreadCounts, createTask, fetchDashboards, createDashboard, deleteDashboard } from "@/lib/api";
 import { dbTaskToTask, taskToDbTask, type Task, type Status, statusConfig } from "@/lib/types";
 import { useUser } from "@/contexts/UserContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -110,6 +110,9 @@ export default function Home() {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [currentDashboardId, setCurrentDashboardId] = useState<number | null>(null);
+  const [newDashboardName, setNewDashboardName] = useState("");
+  const [showDashboardInput, setShowDashboardInput] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -120,8 +123,9 @@ export default function Home() {
   );
 
   const { data: dbTasks = [], isLoading } = useQuery({
-    queryKey: ["tasks"],
-    queryFn: fetchTasks,
+    queryKey: ["tasks", currentDashboardId],
+    queryFn: () => fetchTasks(currentDashboardId),
+    enabled: currentDashboardId !== null,
   });
 
   const { data: unreadCounts = {} } = useQuery({
@@ -151,6 +155,44 @@ export default function Home() {
     },
   });
 
+  const { data: dashboards = [] } = useQuery({
+    queryKey: ["dashboards"],
+    queryFn: fetchDashboards,
+  });
+
+  // Set current dashboard to first one when dashboards load
+  if (dashboards.length > 0 && currentDashboardId === null) {
+    setCurrentDashboardId(dashboards[0].id);
+  }
+
+  const createDashboardMutation = useMutation({
+    mutationFn: createDashboard,
+    onSuccess: (newDashboard) => {
+      queryClient.invalidateQueries({ queryKey: ["dashboards"] });
+      setCurrentDashboardId(newDashboard.id);
+      setNewDashboardName("");
+      setShowDashboardInput(false);
+    },
+  });
+
+  const deleteDashboardMutation = useMutation({
+    mutationFn: deleteDashboard,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dashboards"] });
+      if (dashboards.length > 0) {
+        setCurrentDashboardId(dashboards[0].id);
+      } else {
+        setCurrentDashboardId(null);
+      }
+    },
+  });
+
+  const handleCreateDashboard = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDashboardName.trim()) return;
+    createDashboardMutation.mutate({ name: newDashboardName });
+  };
+
   const handleUpdateTask = (updatedTask: Task) => {
     updateTaskMutation.mutate({ id: updatedTask.id, data: updatedTask });
   };
@@ -169,6 +211,7 @@ export default function Home() {
       invoicedTracking: false,
       paidTracking: false,
       distributedTracking: false,
+      dashboardId: currentDashboardId,
     });
   };
 
@@ -247,18 +290,10 @@ export default function Home() {
         )}>
         <div className="max-w-[1800px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-indigo-200 shadow-lg">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <h1 className={cn(
-              "text-xl font-bold tracking-tight font-heading",
-              theme === "dark" ? "text-white" : "text-slate-900"
-            )}>Project Flow</h1>
+            {/* Logo and title removed per user request */}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 ml-auto">
             <div className="hidden md:flex items-center px-3 py-1.5 bg-slate-100/50 border border-slate-200/60 rounded-full text-sm text-slate-500 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500/50 transition-all">
               <Search className="w-4 h-4 mr-2" />
               <input 
@@ -293,13 +328,92 @@ export default function Home() {
             >
               {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
-            <button className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors">
-              <SlidersHorizontal className="w-5 h-5" />
-            </button>
             <UserAvatar />
           </div>
         </div>
       </header>
+
+      {/* Dashboard Tabs */}
+      <div className={cn(
+        "border-b px-6 py-2",
+        theme === "light" && "border-slate-200/60 bg-white/50",
+        theme === "glassmorphism" && "border-white/20 bg-white/10 backdrop-blur-md",
+        theme === "dark" && "border-slate-700/50 bg-slate-900/50"
+      )}>
+        <div className="max-w-[1800px] mx-auto flex items-center gap-2">
+          {dashboards.map(dashboard => (
+            <button
+              key={dashboard.id}
+              onClick={() => setCurrentDashboardId(dashboard.id)}
+              className={cn(
+                "px-4 py-2 rounded-t-lg text-sm font-medium transition-all group relative",
+                currentDashboardId === dashboard.id
+                  ? theme === "dark"
+                    ? "bg-slate-800 text-white"
+                    : "bg-white text-slate-900 shadow-sm"
+                  : theme === "dark"
+                    ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
+              )}
+              data-testid={`tab-dashboard-${dashboard.id}`}
+            >
+              {dashboard.name}
+              {currentDashboardId === dashboard.id && dashboards.length > 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteDashboardMutation.mutate(dashboard.id);
+                  }}
+                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-opacity"
+                  data-testid={`button-delete-dashboard-${dashboard.id}`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </button>
+          ))}
+          {showDashboardInput ? (
+            <form onSubmit={handleCreateDashboard} className="flex items-center gap-2">
+              <Input
+                value={newDashboardName}
+                onChange={(e) => setNewDashboardName(e.target.value)}
+                placeholder="Dashboard name"
+                className="h-8 w-40"
+                autoFocus
+                data-testid="input-new-dashboard"
+              />
+              <Button type="submit" size="sm" className="h-8" data-testid="button-create-dashboard">
+                Add
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8"
+                onClick={() => {
+                  setShowDashboardInput(false);
+                  setNewDashboardName("");
+                }}
+              >
+                Cancel
+              </Button>
+            </form>
+          ) : (
+            <button
+              onClick={() => setShowDashboardInput(true)}
+              className={cn(
+                "px-3 py-2 rounded-t-lg text-sm font-medium transition-all",
+                theme === "dark"
+                  ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/50"
+              )}
+              data-testid="button-add-dashboard"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Board */}
       <main className="max-w-[1800px] mx-auto p-6 overflow-x-auto">

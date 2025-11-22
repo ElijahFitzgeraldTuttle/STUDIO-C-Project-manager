@@ -1,14 +1,15 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTaskSchema, insertCommentSchema, insertSubtaskSchema, insertPayeeSchema } from "@shared/schema";
+import { insertTaskSchema, insertCommentSchema, insertSubtaskSchema, insertPayeeSchema, insertDashboardSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get all tasks
   app.get("/api/tasks", async (req, res) => {
     try {
-      const tasks = await storage.getTasks();
+      const dashboardId = req.query.dashboardId ? parseInt(req.query.dashboardId as string) : undefined;
+      const tasks = await storage.getTasks(dashboardId);
       res.json(tasks);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch tasks" });
@@ -272,6 +273,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to delete payee" });
+    }
+  });
+
+  // Dashboard routes
+  app.get("/api/dashboards", async (req, res) => {
+    try {
+      const dashboards = await storage.getDashboards();
+      res.json(dashboards);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch dashboards" });
+    }
+  });
+
+  app.post("/api/dashboards", async (req, res) => {
+    try {
+      const validatedData = insertDashboardSchema.parse(req.body);
+      const dashboard = await storage.createDashboard(validatedData);
+      res.status(201).json(dashboard);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create dashboard" });
+    }
+  });
+
+  app.delete("/api/dashboards/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteDashboard(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete dashboard" });
     }
   });
 
