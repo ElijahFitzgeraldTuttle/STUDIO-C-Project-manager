@@ -113,10 +113,17 @@ export function TaskCard({ task, onUpdate, unreadCount = 0 }: TaskCardProps) {
     });
   };
 
-  const handleAssigneeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const AVAILABLE_USERS = ["Miles", "Eli", "Chase"];
+
+  const handleAssigneeToggle = (user: string) => {
+    const currentAssignees = task.assignees || [];
+    const updatedAssignees = currentAssignees.includes(user)
+      ? currentAssignees.filter(a => a !== user)
+      : [...currentAssignees, user];
+    
     onUpdate({
       ...task,
-      assignee: e.target.value
+      assignees: updatedAssignees
     });
   };
 
@@ -268,12 +275,14 @@ export function TaskCard({ task, onUpdate, unreadCount = 0 }: TaskCardProps) {
           </div>
 
           <div className="flex items-center justify-between pt-2 mt-auto">
-            <div className="flex items-center gap-2">
-              {task.assignee && (
-                <div className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded-md">
-                  <User className="w-3 h-3" />
-                  <span>{task.assignee}</span>
-                </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {task.assignees && task.assignees.length > 0 && (
+                task.assignees.map(assignee => (
+                  <div key={assignee} className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded-md">
+                    <User className="w-3 h-3" />
+                    <span>{assignee}</span>
+                  </div>
+                ))
               )}
             </div>
             
@@ -491,18 +500,29 @@ export function TaskCard({ task, onUpdate, unreadCount = 0 }: TaskCardProps) {
               <div className="space-y-1.5 p-4 rounded-lg border border-slate-100 bg-white">
                 <div className="flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-wide mb-2">
                   <User className="w-3.5 h-3.5" />
-                  Assignee
+                  Assignees
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-medium text-sm border border-indigo-200">
-                    {task.assignee ? task.assignee.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
-                  </div>
-                  <Input 
-                    value={task.assignee || ""} 
-                    onChange={handleAssigneeChange}
-                    placeholder="Add assignee..."
-                    className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 placeholder:text-slate-400 font-medium text-slate-900"
-                  />
+                <div className="space-y-2">
+                  {AVAILABLE_USERS.map(user => (
+                    <div key={user} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                      <Checkbox
+                        id={`assignee-${task.id}-${user}`}
+                        checked={task.assignees?.includes(user) || false}
+                        onCheckedChange={() => handleAssigneeToggle(user)}
+                        className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                        data-testid={`checkbox-assignee-${user.toLowerCase()}`}
+                      />
+                      <Label
+                        htmlFor={`assignee-${task.id}-${user}`}
+                        className="text-sm text-slate-700 cursor-pointer font-medium select-none flex items-center gap-2"
+                      >
+                        <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs border border-indigo-200">
+                          {user.charAt(0).toUpperCase()}
+                        </div>
+                        {user}
+                      </Label>
+                    </div>
+                  ))}
                 </div>
               </div>
               

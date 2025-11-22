@@ -14,7 +14,7 @@ export const tasks = pgTable("tasks", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   status: text("status").notNull().default("prospect"),
-  assignee: text("assignee"),
+  assignees: text("assignees").array().notNull().default(sql`ARRAY[]::text[]`),
   tags: text("tags").array().notNull().default(sql`ARRAY[]::text[]`),
   deliveredTracking: boolean("delivered_tracking").notNull().default(false),
   invoicedTracking: boolean("invoiced_tracking").notNull().default(false),

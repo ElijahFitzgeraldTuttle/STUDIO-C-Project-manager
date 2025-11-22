@@ -152,7 +152,7 @@ export default function Home() {
       title: newTaskTitle,
       description: newTaskDescription,
       status: newTaskStatus,
-      assignee: null,
+      assignees: [],
       tags: [],
       deliveredTracking: false,
       invoicedTracking: false,

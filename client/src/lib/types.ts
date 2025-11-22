@@ -15,7 +15,7 @@ export interface Task {
   title: string;
   description: string;
   status: Status;
-  assignee?: string;
+  assignees: string[];
   tags: string[];
   tracking: TaskTracking;
 }
@@ -34,7 +34,7 @@ export function dbTaskToTask(dbTask: DBTask): Task {
     title: dbTask.title,
     description: dbTask.description,
     status: dbTask.status as Status,
-    assignee: dbTask.assignee || undefined,
+    assignees: dbTask.assignees,
     tags: dbTask.tags,
     tracking: {
       delivered: dbTask.deliveredTracking,
@@ -52,7 +52,7 @@ export function taskToDbTask(task: Partial<Task>): any {
   if (task.title !== undefined) dbTask.title = task.title;
   if (task.description !== undefined) dbTask.description = task.description;
   if (task.status !== undefined) dbTask.status = task.status;
-  if (task.assignee !== undefined) dbTask.assignee = task.assignee || null;
+  if (task.assignees !== undefined) dbTask.assignees = task.assignees;
   if (task.tags !== undefined) dbTask.tags = task.tags;
 
   if (task.tracking) {
