@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Settings, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
@@ -115,6 +115,12 @@ export default function Home() {
   const [showDashboardInput, setShowDashboardInput] = useState(false);
   const [editingDashboardId, setEditingDashboardId] = useState<number | null>(null);
   const [editingDashboardName, setEditingDashboardName] = useState("");
+  const [isColumnSettingsOpen, setIsColumnSettingsOpen] = useState(false);
+  const [editingColumnId, setEditingColumnId] = useState<number | null>(null);
+  const [editingColumnName, setEditingColumnName] = useState("");
+  const [editingColumnColor, setEditingColumnColor] = useState("");
+  const [newColumnName, setNewColumnName] = useState("");
+  const [newColumnColor, setNewColumnColor] = useState("#f1f5f9");
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -204,6 +210,34 @@ export default function Home() {
     },
   });
 
+  const createColumnMutation = useMutation({
+    mutationFn: (data: { dashboardId: number; name: string; color: string; order: number }) =>
+      createColumn(data.dashboardId, { name: data.name, color: data.color, order: data.order }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["columns", currentDashboardId] });
+      setNewColumnName("");
+      setNewColumnColor("#f1f5f9");
+    },
+  });
+
+  const updateColumnMutation = useMutation({
+    mutationFn: (data: { id: number; updates: { name?: string; color?: string; order?: number } }) =>
+      updateColumn(data.id, data.updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["columns", currentDashboardId] });
+      setEditingColumnId(null);
+      setEditingColumnName("");
+      setEditingColumnColor("");
+    },
+  });
+
+  const deleteColumnMutation = useMutation({
+    mutationFn: deleteColumn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["columns", currentDashboardId] });
+    },
+  });
+
   const handleCreateDashboard = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDashboardName.trim()) return;
@@ -219,6 +253,51 @@ export default function Home() {
   const startEditingDashboard = (id: number, name: string) => {
     setEditingDashboardId(id);
     setEditingDashboardName(name);
+  };
+
+  const handleCreateColumn = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newColumnName.trim() || !currentDashboardId) return;
+    const nextOrder = columns.length;
+    createColumnMutation.mutate({
+      dashboardId: currentDashboardId,
+      name: newColumnName,
+      color: newColumnColor,
+      order: nextOrder,
+    });
+  };
+
+  const handleUpdateColumn = (id: number) => {
+    if (!editingColumnName.trim()) return;
+    updateColumnMutation.mutate({
+      id,
+      updates: { name: editingColumnName, color: editingColumnColor },
+    });
+  };
+
+  const handleMoveColumn = (id: number, direction: 'up' | 'down') => {
+    const currentIndex = columns.findIndex(col => col.id === id);
+    if (currentIndex === -1) return;
+    
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= columns.length) return;
+    
+    const currentColumn = columns[currentIndex];
+    const targetColumn = columns[targetIndex];
+    
+    // Swap the order values
+    updateColumnMutation.mutate({ id: currentColumn.id, updates: { order: targetColumn.order } });
+    updateColumnMutation.mutate({ id: targetColumn.id, updates: { order: currentColumn.order } });
+  };
+
+  const handleDeleteColumn = (id: number, columnName: string) => {
+    const tasksInColumn = tasks.filter(t => t.status === columnName);
+    if (tasksInColumn.length > 0) {
+      if (!confirm(`This column has ${tasksInColumn.length} task(s). Are you sure you want to delete it? The tasks will remain but may not be visible.`)) {
+        return;
+      }
+    }
+    deleteColumnMutation.mutate(id);
   };
 
   const handleUpdateTask = (updatedTask: Task) => {
@@ -352,6 +431,17 @@ export default function Home() {
               data-testid="button-dark-mode"
             >
               {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button 
+              onClick={() => setIsColumnSettingsOpen(true)}
+              className={cn(
+                "p-2 rounded-full transition-all hover:bg-slate-100",
+                theme === "dark" ? "text-slate-400 hover:bg-slate-800" : "text-slate-500"
+              )}
+              title="Manage Columns"
+              data-testid="button-column-settings"
+            >
+              <Settings className="w-5 h-5" />
             </button>
             <UserAvatar />
           </div>
@@ -601,6 +691,140 @@ export default function Home() {
           })}
         </div>
       </main>
+
+      {/* Column Settings Dialog */}
+      <Dialog open={isColumnSettingsOpen} onOpenChange={setIsColumnSettingsOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Manage Workflow Columns</DialogTitle>
+            <DialogDescription>
+              Add, edit, delete, and reorder columns for this dashboard
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 my-4">
+            {columns.map((column, index) => (
+              <div key={column.id} className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                {editingColumnId === column.id ? (
+                  <>
+                    <Input
+                      value={editingColumnName}
+                      onChange={(e) => setEditingColumnName(e.target.value)}
+                      className="h-9 flex-1"
+                      placeholder="Column name"
+                      data-testid={`input-column-name-${column.id}`}
+                    />
+                    <Input
+                      type="color"
+                      value={editingColumnColor}
+                      onChange={(e) => setEditingColumnColor(e.target.value)}
+                      className="h-9 w-20"
+                      data-testid={`input-column-color-${column.id}`}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleUpdateColumn(column.id)}
+                      data-testid={`button-save-column-${column.id}`}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setEditingColumnId(null);
+                        setEditingColumnName("");
+                        setEditingColumnColor("");
+                      }}
+                      data-testid={`button-cancel-column-${column.id}`}
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className="w-6 h-6 rounded"
+                      style={{ backgroundColor: column.color }}
+                    />
+                    <span className="flex-1 font-medium capitalize">{column.name}</span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => handleMoveColumn(column.id, 'up')}
+                        disabled={index === 0}
+                        data-testid={`button-move-up-${column.id}`}
+                      >
+                        <ChevronUp className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => handleMoveColumn(column.id, 'down')}
+                        disabled={index === columns.length - 1}
+                        data-testid={`button-move-down-${column.id}`}
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => {
+                          setEditingColumnId(column.id);
+                          setEditingColumnName(column.name);
+                          setEditingColumnColor(column.color);
+                        }}
+                        data-testid={`button-edit-column-${column.id}`}
+                      >
+                        <Settings className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => handleDeleteColumn(column.id, column.name)}
+                        data-testid={`button-delete-column-${column.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <form onSubmit={handleCreateColumn} className="flex items-center gap-2 p-3 bg-slate-100 rounded-lg border-2 border-dashed border-slate-300">
+            <Input
+              value={newColumnName}
+              onChange={(e) => setNewColumnName(e.target.value)}
+              className="h-9 flex-1 bg-white"
+              placeholder="New column name"
+              data-testid="input-new-column-name"
+            />
+            <Input
+              type="color"
+              value={newColumnColor}
+              onChange={(e) => setNewColumnColor(e.target.value)}
+              className="h-9 w-20 bg-white"
+              data-testid="input-new-column-color"
+            />
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!newColumnName.trim()}
+              data-testid="button-create-column"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Add Column
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
     </DndContext>
   );
