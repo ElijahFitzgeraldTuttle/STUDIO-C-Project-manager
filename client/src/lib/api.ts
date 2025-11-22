@@ -1,4 +1,4 @@
-import type { Task, Comment, InsertTask, InsertComment } from "@shared/schema";
+import type { Task, Comment, InsertTask, InsertComment, Subtask, InsertSubtask, Payout, Payee, InsertPayee } from "@shared/schema";
 
 const API_BASE = "/api";
 
@@ -64,4 +64,82 @@ export async function getUnreadCounts(userName: string): Promise<Record<number, 
   const response = await fetch(`${API_BASE}/unread-counts?userName=${encodeURIComponent(userName)}`);
   if (!response.ok) throw new Error("Failed to fetch unread counts");
   return response.json();
+}
+
+// Subtask API functions
+export async function fetchSubtasks(taskId: number): Promise<Subtask[]> {
+  const response = await fetch(`${API_BASE}/tasks/${taskId}/subtasks`);
+  if (!response.ok) throw new Error("Failed to fetch subtasks");
+  return response.json();
+}
+
+export async function createSubtask(taskId: number, subtask: Omit<InsertSubtask, "taskId">): Promise<Subtask> {
+  const response = await fetch(`${API_BASE}/tasks/${taskId}/subtasks`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(subtask),
+  });
+  if (!response.ok) throw new Error("Failed to create subtask");
+  return response.json();
+}
+
+export async function updateSubtask(id: number, subtask: Partial<InsertSubtask>): Promise<Subtask> {
+  const response = await fetch(`${API_BASE}/subtasks/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(subtask),
+  });
+  if (!response.ok) throw new Error("Failed to update subtask");
+  return response.json();
+}
+
+export async function deleteSubtask(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE}/subtasks/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete subtask");
+}
+
+// Payout API functions
+export async function fetchPayout(taskId: number): Promise<(Payout & { payees: Payee[] }) | null> {
+  const response = await fetch(`${API_BASE}/tasks/${taskId}/payout`);
+  if (!response.ok) throw new Error("Failed to fetch payout");
+  return response.json();
+}
+
+export async function createOrUpdatePayout(taskId: number, totalAmount: number): Promise<Payout> {
+  const response = await fetch(`${API_BASE}/tasks/${taskId}/payout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ totalAmount }),
+  });
+  if (!response.ok) throw new Error("Failed to create/update payout");
+  return response.json();
+}
+
+export async function addPayee(payoutId: number, payee: Omit<InsertPayee, "payoutId">): Promise<Payee> {
+  const response = await fetch(`${API_BASE}/payouts/${payoutId}/payees`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payee),
+  });
+  if (!response.ok) throw new Error("Failed to add payee");
+  return response.json();
+}
+
+export async function updatePayee(id: number, payee: Partial<Omit<InsertPayee, "payoutId">>): Promise<Payee> {
+  const response = await fetch(`${API_BASE}/payees/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payee),
+  });
+  if (!response.ok) throw new Error("Failed to update payee");
+  return response.json();
+}
+
+export async function deletePayee(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE}/payees/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete payee");
 }

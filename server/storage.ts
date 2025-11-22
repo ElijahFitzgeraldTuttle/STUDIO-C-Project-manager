@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { tasks, comments, commentReads, type Task, type InsertTask, type Comment, type InsertComment, type InsertCommentRead } from "@shared/schema";
+import { tasks, comments, commentReads, subtasks, payouts, payees, type Task, type InsertTask, type Comment, type InsertComment, type InsertCommentRead, type Subtask, type InsertSubtask, type Payout, type InsertPayout, type Payee, type InsertPayee } from "@shared/schema";
 import { eq, and, inArray } from "drizzle-orm";
 
 export interface IStorage {
@@ -18,6 +18,19 @@ export interface IStorage {
   markCommentAsRead(commentId: number, userName: string): Promise<void>;
   markAllTaskCommentsAsRead(taskId: number, userName: string): Promise<void>;
   getUnreadCommentCounts(userName: string): Promise<Map<number, number>>;
+
+  // Subtask operations
+  getSubtasksByTaskId(taskId: number): Promise<Subtask[]>;
+  createSubtask(subtask: InsertSubtask): Promise<Subtask>;
+  updateSubtask(id: number, subtask: Partial<InsertSubtask>): Promise<Subtask | undefined>;
+  deleteSubtask(id: number): Promise<void>;
+
+  // Payout operations
+  getPayoutByTaskId(taskId: number): Promise<(Payout & { payees: Payee[] }) | null>;
+  createOrUpdatePayout(taskId: number, totalAmount: number): Promise<Payout>;
+  addPayee(payoutId: number, payee: Omit<InsertPayee, "payoutId">): Promise<Payee>;
+  updatePayee(id: number, payee: Partial<Omit<InsertPayee, "payoutId">>): Promise<Payee | undefined>;
+  deletePayee(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -142,6 +155,96 @@ export class DatabaseStorage implements IStorage {
     }
 
     return unreadCounts;
+  }
+
+  async getSubtasksByTaskId(taskId: number): Promise<Subtask[]> {
+    return await db
+      .select()
+      .from(subtasks)
+      .where(eq(subtasks.taskId, taskId))
+      .orderBy(subtasks.createdAt);
+  }
+
+  async createSubtask(insertSubtask: InsertSubtask): Promise<Subtask> {
+    const result = await db.insert(subtasks).values(insertSubtask).returning();
+    return result[0];
+  }
+
+  async updateSubtask(id: number, subtaskUpdate: Partial<InsertSubtask>): Promise<Subtask | undefined> {
+    const result = await db
+      .update(subtasks)
+      .set(subtaskUpdate)
+      .where(eq(subtasks.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteSubtask(id: number): Promise<void> {
+    await db.delete(subtasks).where(eq(subtasks.id, id));
+  }
+
+  async getPayoutByTaskId(taskId: number): Promise<(Payout & { payees: Payee[] }) | null> {
+    const payout = await db
+      .select()
+      .from(payouts)
+      .where(eq(payouts.taskId, taskId))
+      .limit(1);
+
+    if (payout.length === 0) return null;
+
+    const payeeList = await db
+      .select()
+      .from(payees)
+      .where(eq(payees.payoutId, payout[0].id));
+
+    return {
+      ...payout[0],
+      payees: payeeList,
+    };
+  }
+
+  async createOrUpdatePayout(taskId: number, totalAmount: number): Promise<Payout> {
+    const existing = await db
+      .select()
+      .from(payouts)
+      .where(eq(payouts.taskId, taskId))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const result = await db
+        .update(payouts)
+        .set({ totalAmount })
+        .where(eq(payouts.id, existing[0].id))
+        .returning();
+      return result[0];
+    } else {
+      const result = await db
+        .insert(payouts)
+        .values({ taskId, totalAmount })
+        .returning();
+      return result[0];
+    }
+  }
+
+  async addPayee(payoutId: number, payee: Omit<InsertPayee, "payoutId">): Promise<Payee> {
+    const result = await db
+      .insert(payees)
+      .values({ ...payee, payoutId })
+      .returning();
+    return result[0];
+  }
+
+  async updatePayee(id: number, payeeUpdate: Partial<Omit<InsertPayee, "payoutId">>): Promise<Payee | undefined> {
+    const result = await db
+      .update(payees)
+      .set(payeeUpdate)
+      .where(eq(payees.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deletePayee(id: number): Promise<void> {
+    await db.delete(payees).where(eq(payees.id, id));
   }
 }
 

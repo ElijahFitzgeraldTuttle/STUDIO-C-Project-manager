@@ -7,6 +7,9 @@ import { fetchTasks, updateTask, getUnreadCounts, createTask } from "@/lib/api";
 import { dbTaskToTask, taskToDbTask, type Task, type Status, statusConfig } from "@/lib/types";
 import { useUser } from "@/contexts/UserContext";
 import { useState } from "react";
+import { DndContext, DragEndEvent, useDroppable } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,6 +57,48 @@ function UserAvatar() {
   );
 }
 
+function DraggableTask({ task, unreadCount, onUpdate }: { task: Task; unreadCount: number; onUpdate: (task: Task) => void }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id.toString() });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <TaskCard 
+        task={task} 
+        onUpdate={onUpdate}
+        unreadCount={unreadCount}
+      />
+    </div>
+  );
+}
+
+function DroppableColumn({ id, children, className }: { id: string; children: React.ReactNode; className?: string }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id,
+  });
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      className={cn(className, isOver && "ring-2 ring-indigo-400 ring-offset-2")}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default function Home() {
   const queryClient = useQueryClient();
   const { currentUser } = useUser();
@@ -61,6 +106,7 @@ export default function Home() {
   const [newTaskStatus, setNewTaskStatus] = useState<Status>("prospect");
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const { data: dbTasks = [], isLoading } = useQuery({
     queryKey: ["tasks"],
@@ -115,6 +161,30 @@ export default function Home() {
     });
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over) return;
+    
+    const taskId = parseInt(active.id.toString());
+    const newStatus = over.id as string;
+    
+    // Validate that the drop target is a valid status column
+    const validStatuses: Status[] = ["prospect", "scheduled", "in-progress", "complete"];
+    if (!validStatuses.includes(newStatus as Status)) return;
+    
+    const task = tasks.find(t => t.id === taskId);
+    if (task && task.status !== newStatus) {
+      handleUpdateTask({ ...task, status: newStatus as Status });
+    }
+    
+    setActiveId(null);
+  };
+
+  const handleDragStart = (event: any) => {
+    setActiveId(event.active.id);
+  };
+
   const columns: Status[] = ["prospect", "scheduled", "in-progress", "complete"];
 
   if (isLoading) {
@@ -126,9 +196,13 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
-      {/* Header */}
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-6 py-4">
+    <DndContext
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
+        {/* Header */}
+        <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-indigo-200 shadow-lg">
@@ -182,23 +256,29 @@ export default function Home() {
                 </div>
 
                 {/* Column Content */}
-                <div className={cn(
-                  "flex-1 bg-slate-100/50 rounded-xl p-3 border border-slate-200/60 flex flex-col gap-3 min-h-[500px]",
-                  status === 'prospect' && "bg-slate-50/80",
-                  status === 'scheduled' && "bg-amber-50/30",
-                  status === 'in-progress' && "bg-blue-50/30",
-                  status === 'complete' && "bg-emerald-50/30"
-                )}>
-                  <AnimatePresence mode="popLayout">
-                    {columnTasks.map((task) => (
-                      <TaskCard 
-                        key={task.id} 
-                        task={task} 
-                        onUpdate={handleUpdateTask}
-                        unreadCount={unreadCounts[task.id] || 0}
-                      />
-                    ))}
-                  </AnimatePresence>
+                <DroppableColumn
+                  id={status}
+                  className={cn(
+                    "flex-1 bg-slate-100/50 rounded-xl p-3 border border-slate-200/60 flex flex-col gap-3 min-h-[500px] transition-all",
+                    status === 'prospect' && "bg-slate-50/80",
+                    status === 'scheduled' && "bg-amber-50/30",
+                    status === 'in-progress' && "bg-blue-50/30",
+                    status === 'complete' && "bg-emerald-50/30"
+                  )}
+                  data-testid={`column-${status}`}
+                >
+                  <SortableContext items={columnTasks.map(t => t.id.toString())} strategy={verticalListSortingStrategy}>
+                    <AnimatePresence mode="popLayout">
+                      {columnTasks.map((task) => (
+                        <DraggableTask
+                          key={task.id} 
+                          task={task} 
+                          onUpdate={handleUpdateTask}
+                          unreadCount={unreadCounts[task.id] || 0}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </SortableContext>
                   
                   {columnTasks.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-32 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg mx-2 my-4">
@@ -272,12 +352,13 @@ export default function Home() {
                       </form>
                     </DialogContent>
                   </Dialog>
-                </div>
+                </DroppableColumn>
               </div>
             );
           })}
         </div>
       </main>
     </div>
+    </DndContext>
   );
 }

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTaskSchema, insertCommentSchema } from "@shared/schema";
+import { insertTaskSchema, insertCommentSchema, insertSubtaskSchema, insertPayeeSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -149,6 +149,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(countsObj);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch unread counts" });
+    }
+  });
+
+  // Subtask routes
+  app.get("/api/tasks/:id/subtasks", async (req, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const subtasks = await storage.getSubtasksByTaskId(taskId);
+      res.json(subtasks);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch subtasks" });
+    }
+  });
+
+  app.post("/api/tasks/:id/subtasks", async (req, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const validatedData = insertSubtaskSchema.parse({
+        ...req.body,
+        taskId,
+      });
+      const subtask = await storage.createSubtask(validatedData);
+      res.status(201).json(subtask);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create subtask" });
+    }
+  });
+
+  app.patch("/api/subtasks/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertSubtaskSchema.partial().parse(req.body);
+      const subtask = await storage.updateSubtask(id, validatedData);
+      if (!subtask) {
+        return res.status(404).json({ error: "Subtask not found" });
+      }
+      res.json(subtask);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update subtask" });
+    }
+  });
+
+  app.delete("/api/subtasks/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteSubtask(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete subtask" });
+    }
+  });
+
+  // Payout routes
+  app.get("/api/tasks/:id/payout", async (req, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const payout = await storage.getPayoutByTaskId(taskId);
+      res.json(payout);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch payout" });
+    }
+  });
+
+  app.post("/api/tasks/:id/payout", async (req, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const { totalAmount } = req.body;
+      
+      if (typeof totalAmount !== 'number') {
+        return res.status(400).json({ error: "totalAmount is required and must be a number" });
+      }
+
+      const payout = await storage.createOrUpdatePayout(taskId, totalAmount);
+      res.json(payout);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create/update payout" });
+    }
+  });
+
+  app.post("/api/payouts/:id/payees", async (req, res) => {
+    try {
+      const payoutId = parseInt(req.params.id);
+      const validatedData = insertPayeeSchema.omit({ payoutId: true }).parse(req.body);
+      const payee = await storage.addPayee(payoutId, validatedData);
+      res.status(201).json(payee);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to add payee" });
+    }
+  });
+
+  app.patch("/api/payees/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertPayeeSchema.omit({ payoutId: true }).partial().parse(req.body);
+      const payee = await storage.updatePayee(id, validatedData);
+      if (!payee) {
+        return res.status(404).json({ error: "Payee not found" });
+      }
+      res.json(payee);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update payee" });
+    }
+  });
+
+  app.delete("/api/payees/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deletePayee(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete payee" });
     }
   });
 

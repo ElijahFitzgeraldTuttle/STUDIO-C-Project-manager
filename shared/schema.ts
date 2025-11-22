@@ -38,6 +38,33 @@ export const commentReads = pgTable("comment_reads", {
   readAt: timestamp("read_at").defaultNow().notNull(),
 });
 
+export const subtasks = pgTable("subtasks", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  completed: boolean("completed").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const payouts = pgTable("payouts", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+  totalAmount: integer("total_amount").notNull().default(0),
+});
+
+export const payees = pgTable("payees", {
+  id: serial("id").primaryKey(),
+  payoutId: integer("payout_id").notNull().references(() => payouts.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  amount: integer("amount").notNull().default(0),
+});
+
+export const dashboards = pgTable("dashboards", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -58,6 +85,24 @@ export const insertCommentReadSchema = createInsertSchema(commentReads).omit({
   readAt: true,
 });
 
+export const insertSubtaskSchema = createInsertSchema(subtasks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPayoutSchema = createInsertSchema(payouts).omit({
+  id: true,
+});
+
+export const insertPayeeSchema = createInsertSchema(payees).omit({
+  id: true,
+});
+
+export const insertDashboardSchema = createInsertSchema(dashboards).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
@@ -66,3 +111,11 @@ export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type Comment = typeof comments.$inferSelect;
 export type InsertCommentRead = z.infer<typeof insertCommentReadSchema>;
 export type CommentRead = typeof commentReads.$inferSelect;
+export type InsertSubtask = z.infer<typeof insertSubtaskSchema>;
+export type Subtask = typeof subtasks.$inferSelect;
+export type InsertPayout = z.infer<typeof insertPayoutSchema>;
+export type Payout = typeof payouts.$inferSelect;
+export type InsertPayee = z.infer<typeof insertPayeeSchema>;
+export type Payee = typeof payees.$inferSelect;
+export type InsertDashboard = z.infer<typeof insertDashboardSchema>;
+export type Dashboard = typeof dashboards.$inferSelect;

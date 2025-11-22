@@ -1,5 +1,6 @@
 import { type Task, type TaskTracking, type Comment, statusConfig } from "@/lib/types";
-import { MoreHorizontal, User, CheckCircle2, MessageSquare, Send, Bell } from "lucide-react";
+import type { Subtask, Payout, Payee } from "@shared/schema";
+import { MoreHorizontal, User, CheckCircle2, MessageSquare, Send, Bell, ListTodo, X, Plus, DollarSign, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,7 +23,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchComments, createComment, markAllTaskCommentsAsRead } from "@/lib/api";
+import { fetchComments, createComment, markAllTaskCommentsAsRead, fetchSubtasks, createSubtask, updateSubtask, deleteSubtask, fetchPayout, createOrUpdatePayout, addPayee, updatePayee, deletePayee } from "@/lib/api";
 import { dbCommentToComment } from "@/lib/types";
 import { useUser } from "@/contexts/UserContext";
 
@@ -35,6 +36,10 @@ interface TaskCardProps {
 export function TaskCard({ task, onUpdate, unreadCount = 0 }: TaskCardProps) {
   const [newComment, setNewComment] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [payoutTotal, setPayoutTotal] = useState("");
+  const [newPayeeName, setNewPayeeName] = useState("");
+  const [newPayeeAmount, setNewPayeeAmount] = useState("");
   const queryClient = useQueryClient();
   const { currentUser } = useUser();
   
@@ -43,6 +48,23 @@ export function TaskCard({ task, onUpdate, unreadCount = 0 }: TaskCardProps) {
     queryFn: () => fetchComments(task.id),
     enabled: !!task.id,
   });
+
+  const { data: subtasks = [] } = useQuery({
+    queryKey: ["subtasks", task.id],
+    queryFn: () => fetchSubtasks(task.id),
+    enabled: !!task.id,
+  });
+
+  const { data: payoutData } = useQuery({
+    queryKey: ["payout", task.id],
+    queryFn: () => fetchPayout(task.id),
+    enabled: !!task.id,
+  });
+
+  // Initialize payoutTotal when payoutData loads
+  if (payoutData && !payoutTotal) {
+    setPayoutTotal(payoutData.totalAmount.toString());
+  }
 
   const comments = dbComments.map(dbCommentToComment);
 
@@ -104,6 +126,79 @@ export function TaskCard({ task, onUpdate, unreadCount = 0 }: TaskCardProps) {
     createCommentMutation.mutate(newComment);
     setNewComment("");
   };
+
+  // Subtask mutations
+  const createSubtaskMutation = useMutation({
+    mutationFn: (title: string) => createSubtask(task.id, { title, completed: false }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subtasks", task.id] });
+      setNewSubtaskTitle("");
+    },
+  });
+
+  const toggleSubtaskMutation = useMutation({
+    mutationFn: ({ id, completed }: { id: number; completed: boolean }) =>
+      updateSubtask(id, { completed }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subtasks", task.id] });
+    },
+  });
+
+  const deleteSubtaskMutation = useMutation({
+    mutationFn: deleteSubtask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subtasks", task.id] });
+    },
+  });
+
+  // Payout mutations
+  const updatePayoutTotalMutation = useMutation({
+    mutationFn: (totalAmount: number) => createOrUpdatePayout(task.id, totalAmount),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payout", task.id] });
+    },
+  });
+
+  const addPayeeMutation = useMutation({
+    mutationFn: ({ name, amount }: { name: string; amount: number }) => {
+      if (!payoutData?.id) throw new Error("Payout must be created first");
+      return addPayee(payoutData.id, { name, amount });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payout", task.id] });
+      setNewPayeeName("");
+      setNewPayeeAmount("");
+    },
+  });
+
+  const deletePayeeMutation = useMutation({
+    mutationFn: deletePayee,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payout", task.id] });
+    },
+  });
+
+  const handleAddSubtask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSubtaskTitle.trim()) return;
+    createSubtaskMutation.mutate(newSubtaskTitle);
+  };
+
+  const handleUpdatePayoutTotal = () => {
+    const amount = parseInt(payoutTotal);
+    if (isNaN(amount) || amount < 0) return;
+    updatePayoutTotalMutation.mutate(amount);
+  };
+
+  const handleAddPayee = (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = parseInt(newPayeeAmount);
+    if (!newPayeeName.trim() || isNaN(amount) || amount < 0) return;
+    addPayeeMutation.mutate({ name: newPayeeName, amount });
+  };
+
+  const totalPaid = payoutData?.payees.reduce((sum, p) => sum + p.amount, 0) || 0;
+  const remaining = (payoutData?.totalAmount || 0) - totalPaid;
 
   const StatusIcon = statusConfig[task.status].icon;
 
@@ -227,6 +322,145 @@ export function TaskCard({ task, onUpdate, unreadCount = 0 }: TaskCardProps) {
             </DialogHeader>
 
             <div className="space-y-6">
+              {/* Subtasks Section */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                  <ListTodo className="w-4 h-4 text-slate-500" />
+                  Subtasks
+                  <span className="text-xs text-slate-500 font-normal">
+                    ({subtasks.filter(s => s.completed).length}/{subtasks.length})
+                  </span>
+                </h4>
+                <div className="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  {subtasks.map(subtask => (
+                    <div key={subtask.id} className="flex items-center gap-3 p-2 hover:bg-white rounded-lg transition-colors group">
+                      <Checkbox 
+                        checked={subtask.completed}
+                        onCheckedChange={(checked) => toggleSubtaskMutation.mutate({ id: subtask.id, completed: checked === true })}
+                        className="h-5 w-5 rounded-md border-slate-300"
+                        data-testid={`checkbox-subtask-${subtask.id}`}
+                      />
+                      <span className={cn("flex-1 text-sm", subtask.completed && "line-through text-slate-400")}>
+                        {subtask.title}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => deleteSubtaskMutation.mutate(subtask.id)}
+                        data-testid={`button-delete-subtask-${subtask.id}`}
+                      >
+                        <X className="w-3.5 h-3.5 text-slate-400" />
+                      </Button>
+                    </div>
+                  ))}
+                  <form onSubmit={handleAddSubtask} className="flex gap-2 mt-3">
+                    <Input 
+                      value={newSubtaskTitle}
+                      onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                      placeholder="Add subtask..."
+                      className="h-9 bg-white"
+                      data-testid="input-new-subtask"
+                    />
+                    <Button 
+                      type="submit" 
+                      size="sm"
+                      disabled={!newSubtaskTitle.trim()}
+                      data-testid="button-add-subtask"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </form>
+                </div>
+              </div>
+
+              {/* Payouts Section */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-slate-500" />
+                  Payouts
+                </h4>
+                <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-600">Total Amount</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        type="number"
+                        value={payoutTotal}
+                        onChange={(e) => setPayoutTotal(e.target.value)}
+                        onBlur={handleUpdatePayoutTotal}
+                        placeholder="0"
+                        className="h-9 bg-white"
+                        data-testid="input-payout-total"
+                      />
+                    </div>
+                  </div>
+
+                  {payoutData && payoutData.payees.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-600">Payees</Label>
+                      {payoutData.payees.map(payee => (
+                        <div key={payee.id} className="flex items-center gap-2 p-2 bg-white rounded-lg group">
+                          <span className="flex-1 text-sm font-medium text-slate-700">{payee.name}</span>
+                          <span className="text-sm text-slate-600">${payee.amount}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => deletePayeeMutation.mutate(payee.id)}
+                            data-testid={`button-delete-payee-${payee.id}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-slate-400" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleAddPayee} className="grid grid-cols-2 gap-2">
+                    <Input 
+                      value={newPayeeName}
+                      onChange={(e) => setNewPayeeName(e.target.value)}
+                      placeholder="Payee name"
+                      className="h-9 bg-white"
+                      data-testid="input-payee-name"
+                    />
+                    <div className="flex gap-2">
+                      <Input 
+                        type="number"
+                        value={newPayeeAmount}
+                        onChange={(e) => setNewPayeeAmount(e.target.value)}
+                        placeholder="Amount"
+                        className="h-9 bg-white"
+                        data-testid="input-payee-amount"
+                      />
+                      <Button 
+                        type="submit" 
+                        size="sm"
+                        disabled={!newPayeeName.trim() || !newPayeeAmount}
+                        data-testid="button-add-payee"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </form>
+
+                  {payoutData && (
+                    <div className="pt-2 border-t border-slate-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-slate-700">Remaining</span>
+                        <span className={cn(
+                          "text-sm font-bold",
+                          remaining < 0 ? "text-red-600" : remaining > 0 ? "text-indigo-600" : "text-emerald-600"
+                        )}>
+                          ${remaining}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Tracking Section */}
               <div className="space-y-3">
                 <h4 className="text-sm font-medium text-slate-900 flex items-center gap-2">
