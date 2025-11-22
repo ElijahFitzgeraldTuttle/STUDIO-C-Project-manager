@@ -65,13 +65,17 @@
   body {
     @apply font-sans antialiased text-foreground;
   }
-  body.dark {
+  html[data-theme="dark"] {
     background-color: #0f172a;
     background-image: url("/dark-bg.jpg");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
+  }
+  
+  html[data-theme="dark"] body {
+    background: transparent;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
