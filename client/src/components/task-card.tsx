@@ -1,4 +1,4 @@
-import { Task, statusConfig, TaskTracking, Comment } from "@/lib/mock-data";
+import { type Task, type TaskTracking, type Comment, statusConfig } from "@/lib/types";
 import { MoreHorizontal, User, CheckCircle2, MessageSquare, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -21,6 +21,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchComments, createComment } from "@/lib/api";
+import { dbCommentToComment } from "@/lib/types";
 
 interface TaskCardProps {
   task: Task;
@@ -29,7 +32,24 @@ interface TaskCardProps {
 
 export function TaskCard({ task, onUpdate }: TaskCardProps) {
   const [newComment, setNewComment] = useState("");
+  const queryClient = useQueryClient();
   
+  const { data: dbComments = [] } = useQuery({
+    queryKey: ["comments", task.id],
+    queryFn: () => fetchComments(task.id),
+    enabled: !!task.id,
+  });
+
+  const comments = dbComments.map(dbCommentToComment);
+
+  const createCommentMutation = useMutation({
+    mutationFn: (text: string) =>
+      createComment(task.id, { author: "You", text }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", task.id] });
+    },
+  });
+
   const handleTrackingChange = (key: keyof TaskTracking, checked: boolean) => {
     onUpdate({
       ...task,
@@ -50,18 +70,7 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-
-    const comment: Comment = {
-      id: Math.random().toString(36).substr(2, 9),
-      author: "You", // Mock current user
-      text: newComment,
-      timestamp: "Just now"
-    };
-
-    onUpdate({
-      ...task,
-      comments: [...task.comments, comment]
-    });
+    createCommentMutation.mutate(newComment);
     setNewComment("");
   };
 
@@ -71,7 +80,7 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
     <Dialog>
       <DialogTrigger asChild>
         <motion.div
-          layoutId={task.id}
+          layoutId={task.id.toString()}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95 }}
@@ -142,10 +151,10 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
               )}
             </div>
             
-            {task.comments.length > 0 && (
+            {comments.length > 0 && (
               <div className="flex items-center gap-1 text-xs text-slate-400">
                 <MessageSquare className="w-3 h-3" />
-                <span>{task.comments.length}</span>
+                <span>{comments.length}</span>
               </div>
             )}
           </div>
@@ -243,13 +252,13 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
             </div>
             
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {task.comments.length === 0 ? (
+              {comments.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-slate-400 p-8 text-center">
                   <MessageSquare className="w-8 h-8 mb-2 opacity-20" />
                   <p className="text-sm">No comments yet.<br/>Start the conversation!</p>
                 </div>
               ) : (
-                task.comments.map(comment => (
+                comments.map(comment => (
                   <div key={comment.id} className="flex gap-3 text-sm group">
                      <div className="w-8 h-8 rounded-full bg-white text-slate-500 flex items-center justify-center font-bold text-xs border border-slate-200 shrink-0 shadow-sm">
                       {comment.author.charAt(0)}

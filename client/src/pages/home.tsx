@@ -1,18 +1,42 @@
-import { useState } from "react";
-import { Task, initialTasks, statusConfig, Status } from "@/lib/mock-data";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
 import { Plus, Search, SlidersHorizontal } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { fetchTasks, updateTask } from "@/lib/api";
+import { dbTaskToTask, taskToDbTask, type Task, type Status, statusConfig } from "@/lib/types";
 
 export default function Home() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const queryClient = useQueryClient();
+
+  const { data: dbTasks = [], isLoading } = useQuery({
+    queryKey: ["tasks"],
+    queryFn: fetchTasks,
+  });
+
+  const tasks = dbTasks.map(dbTaskToTask);
+
+  const updateTaskMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Task> }) =>
+      updateTask(id, taskToDbTask(data)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
 
   const handleUpdateTask = (updatedTask: Task) => {
-    setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
+    updateTaskMutation.mutate({ id: updatedTask.id, data: updatedTask });
   };
 
   const columns: Status[] = ["prospect", "scheduled", "in-progress", "complete"];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50/50 flex items-center justify-center">
+        <div className="text-slate-500">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
@@ -75,7 +99,6 @@ export default function Home() {
                 {/* Column Content */}
                 <div className={cn(
                   "flex-1 bg-slate-100/50 rounded-xl p-3 border border-slate-200/60 flex flex-col gap-3 min-h-[500px]",
-                  // Add distinct background tint per column for better visual separation
                   status === 'prospect' && "bg-slate-50/80",
                   status === 'scheduled' && "bg-amber-50/30",
                   status === 'in-progress' && "bg-blue-50/30",
