@@ -58,6 +58,7 @@ export const payees = pgTable("payees", {
   payoutId: integer("payout_id").notNull().references(() => payouts.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   amount: integer("amount").notNull().default(0),
+  paid: boolean("paid").notNull().default(false),
 });
 
 export const dashboards = pgTable("dashboards", {

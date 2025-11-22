@@ -1,5 +1,5 @@
 import { type Task, type TaskTracking, type Comment, statusConfig } from "@/lib/types";
-import type { Subtask, Payout, Payee } from "@shared/schema";
+import type { Subtask, Payout, Payee, InsertPayee } from "@shared/schema";
 import { MoreHorizontal, User, CheckCircle2, MessageSquare, Send, Bell, ListTodo, X, Plus, DollarSign, Trash2, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -178,6 +178,14 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
       queryClient.invalidateQueries({ queryKey: ["payout", task.id] });
       setNewPayeeName("");
       setNewPayeeAmount("");
+    },
+  });
+
+  const updatePayeeMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Omit<InsertPayee, "payoutId">> }) => 
+      updatePayee(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payout", task.id] });
     },
   });
 
@@ -502,12 +510,24 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                           theme === "glassmorphism" && "bg-white/50",
                           theme === "dark" && "bg-slate-600/30"
                         )}>
+                          <Checkbox
+                            checked={payee.paid}
+                            onCheckedChange={(checked) => {
+                              updatePayeeMutation.mutate({
+                                id: payee.id,
+                                data: { paid: checked === true }
+                              });
+                            }}
+                            data-testid={`checkbox-payee-paid-${payee.id}`}
+                          />
                           <span className={cn(
                             "flex-1 text-sm font-medium",
+                            payee.paid && "line-through opacity-60",
                             theme === "dark" ? "text-slate-200" : "text-slate-700"
                           )}>{payee.name}</span>
                           <span className={cn(
                             "text-sm",
+                            payee.paid && "line-through opacity-60",
                             theme === "dark" ? "text-slate-300" : "text-slate-600"
                           )}>${payee.amount}</span>
                           <Button
