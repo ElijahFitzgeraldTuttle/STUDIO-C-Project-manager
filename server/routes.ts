@@ -276,6 +276,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all unpaid payouts grouped by payee name
+  app.get("/api/unpaid-payouts", async (req, res) => {
+    try {
+      const unpaidPayouts = await storage.getUnpaidPayouts();
+      res.json(unpaidPayouts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch unpaid payouts" });
+    }
+  });
+
   // Dashboard routes
   app.get("/api/dashboards", async (req, res) => {
     try {

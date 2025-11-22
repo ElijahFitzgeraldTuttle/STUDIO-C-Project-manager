@@ -145,6 +145,12 @@ export async function deletePayee(id: number): Promise<void> {
   if (!response.ok) throw new Error("Failed to delete payee");
 }
 
+export async function fetchUnpaidPayouts(): Promise<Array<{ name: string; totalUnpaid: number; tasks: Array<{ taskId: number; taskTitle: string; amount: number; reason: string }> }>> {
+  const response = await fetch(`${API_BASE}/unpaid-payouts`);
+  if (!response.ok) throw new Error("Failed to fetch unpaid payouts");
+  return response.json();
+}
+
 export async function fetchDashboards(): Promise<Dashboard[]> {
   const response = await fetch(`${API_BASE}/dashboards`);
   if (!response.ok) throw new Error("Failed to fetch dashboards");

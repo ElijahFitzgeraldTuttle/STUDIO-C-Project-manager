@@ -31,6 +31,7 @@ export interface IStorage {
   addPayee(payoutId: number, payee: Omit<InsertPayee, "payoutId">): Promise<Payee>;
   updatePayee(id: number, payee: Partial<Omit<InsertPayee, "payoutId">>): Promise<Payee | undefined>;
   deletePayee(id: number): Promise<void>;
+  getUnpaidPayouts(): Promise<Array<{ name: string; totalUnpaid: number; tasks: Array<{ taskId: number; taskTitle: string; amount: number; reason: string }> }>>;
 
   // Dashboard operations
   getDashboards(): Promise<Dashboard[]>;
@@ -263,6 +264,44 @@ export class DatabaseStorage implements IStorage {
 
   async deletePayee(id: number): Promise<void> {
     await db.delete(payees).where(eq(payees.id, id));
+  }
+
+  async getUnpaidPayouts(): Promise<Array<{ name: string; totalUnpaid: number; tasks: Array<{ taskId: number; taskTitle: string; amount: number; reason: string }> }>> {
+    // Get all unpaid payees with their task information
+    const unpaidPayees = await db
+      .select({
+        payeeName: payees.name,
+        payeeAmount: payees.amount,
+        payeeReason: payees.reason,
+        taskId: tasks.id,
+        taskTitle: tasks.title,
+      })
+      .from(payees)
+      .innerJoin(payouts, eq(payees.payoutId, payouts.id))
+      .innerJoin(tasks, eq(payouts.taskId, tasks.id))
+      .where(eq(payees.paid, false));
+
+    // Group by payee name
+    const groupedByName = new Map<string, Array<{ taskId: number; taskTitle: string; amount: number; reason: string }>>();
+    
+    for (const record of unpaidPayees) {
+      if (!groupedByName.has(record.payeeName)) {
+        groupedByName.set(record.payeeName, []);
+      }
+      groupedByName.get(record.payeeName)!.push({
+        taskId: record.taskId,
+        taskTitle: record.taskTitle,
+        amount: record.payeeAmount,
+        reason: record.payeeReason,
+      });
+    }
+
+    // Convert to the expected format with totals
+    return Array.from(groupedByName.entries()).map(([name, tasks]) => ({
+      name,
+      totalUnpaid: tasks.reduce((sum, task) => sum + task.amount, 0),
+      tasks,
+    }));
   }
 
   async getDashboards(): Promise<Dashboard[]> {
