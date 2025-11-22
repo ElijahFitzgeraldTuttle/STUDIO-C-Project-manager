@@ -57,6 +57,7 @@ export const payees = pgTable("payees", {
   id: serial("id").primaryKey(),
   payoutId: integer("payout_id").notNull().references(() => payouts.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
+  reason: text("reason").notNull().default(""),
   amount: integer("amount").notNull().default(0),
   paid: boolean("paid").notNull().default(false),
 });

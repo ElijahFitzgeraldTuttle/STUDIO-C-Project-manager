@@ -41,6 +41,7 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [payoutTotal, setPayoutTotal] = useState("");
   const [newPayeeName, setNewPayeeName] = useState("");
+  const [newPayeeReason, setNewPayeeReason] = useState("");
   const [newPayeeAmount, setNewPayeeAmount] = useState("");
   const queryClient = useQueryClient();
   const { currentUser } = useUser();
@@ -170,13 +171,14 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
   });
 
   const addPayeeMutation = useMutation({
-    mutationFn: ({ name, amount }: { name: string; amount: number }) => {
+    mutationFn: ({ name, reason, amount }: { name: string; reason: string; amount: number }) => {
       if (!payoutData?.id) throw new Error("Payout must be created first");
-      return addPayee(payoutData.id, { name, amount });
+      return addPayee(payoutData.id, { name, reason, amount });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payout", task.id] });
       setNewPayeeName("");
+      setNewPayeeReason("");
       setNewPayeeAmount("");
     },
   });
@@ -212,7 +214,7 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
     e.preventDefault();
     const amount = parseInt(newPayeeAmount);
     if (!newPayeeName.trim() || isNaN(amount) || amount < 0) return;
-    addPayeeMutation.mutate({ name: newPayeeName, amount });
+    addPayeeMutation.mutate({ name: newPayeeName, reason: newPayeeReason, amount });
   };
 
   const totalPaid = payoutData?.payees.reduce((sum, p) => sum + p.amount, 0) || 0;
@@ -511,46 +513,57 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                       )}>Payees</Label>
                       {payoutData.payees.map(payee => (
                         <div key={payee.id} className={cn(
-                          "flex items-center gap-2 p-2 rounded-lg group",
+                          "flex flex-col gap-1 p-2 rounded-lg group",
                           theme === "light" && "bg-white",
                           theme === "glassmorphism" && "bg-white/50",
                           theme === "dark" && "bg-slate-600/30"
                         )}>
-                          <Checkbox
-                            checked={payee.paid}
-                            onCheckedChange={(checked) => {
-                              updatePayeeMutation.mutate({
-                                id: payee.id,
-                                data: { paid: checked === true }
-                              });
-                            }}
-                            data-testid={`checkbox-payee-paid-${payee.id}`}
-                          />
-                          <span className={cn(
-                            "flex-1 text-sm font-medium",
-                            payee.paid && "line-through opacity-60",
-                            theme === "dark" ? "text-slate-200" : "text-slate-700"
-                          )}>{payee.name}</span>
-                          <span className={cn(
-                            "text-sm",
-                            payee.paid && "line-through opacity-60",
-                            theme === "dark" ? "text-slate-300" : "text-slate-600"
-                          )}>${payee.amount}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => deletePayeeMutation.mutate(payee.id)}
-                            data-testid={`button-delete-payee-${payee.id}`}
-                          >
-                            <Trash2 className="w-3.5 h-3.5 text-slate-400" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              checked={payee.paid}
+                              onCheckedChange={(checked) => {
+                                updatePayeeMutation.mutate({
+                                  id: payee.id,
+                                  data: { paid: checked === true }
+                                });
+                              }}
+                              data-testid={`checkbox-payee-paid-${payee.id}`}
+                            />
+                            <span className={cn(
+                              "flex-1 text-sm font-medium",
+                              payee.paid && "line-through opacity-60",
+                              theme === "dark" ? "text-slate-200" : "text-slate-700"
+                            )}>{payee.name}</span>
+                            <span className={cn(
+                              "text-sm",
+                              payee.paid && "line-through opacity-60",
+                              theme === "dark" ? "text-slate-300" : "text-slate-600"
+                            )}>${payee.amount}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => deletePayeeMutation.mutate(payee.id)}
+                              data-testid={`button-delete-payee-${payee.id}`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-slate-400" />
+                            </Button>
+                          </div>
+                          {payee.reason && (
+                            <div className={cn(
+                              "text-xs pl-6",
+                              payee.paid && "line-through opacity-60",
+                              theme === "dark" ? "text-slate-400" : "text-slate-500"
+                            )}>
+                              {payee.reason}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
                   )}
 
-                  <form onSubmit={handleAddPayee} className="grid grid-cols-2 gap-2">
+                  <form onSubmit={handleAddPayee} className="space-y-2">
                     <Input 
                       value={newPayeeName}
                       onChange={(e) => setNewPayeeName(e.target.value)}
@@ -561,6 +574,16 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                       )}
                       data-testid="input-payee-name"
                     />
+                    <Input 
+                      value={newPayeeReason}
+                      onChange={(e) => setNewPayeeReason(e.target.value)}
+                      placeholder="Reason"
+                      className={cn(
+                        "h-9",
+                        theme === "dark" ? "bg-slate-700 text-slate-100 border-slate-600" : "bg-white"
+                      )}
+                      data-testid="input-payee-reason"
+                    />
                     <div className="flex gap-2">
                       <Input 
                         type="number"
@@ -568,7 +591,7 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                         onChange={(e) => setNewPayeeAmount(e.target.value)}
                         placeholder="Amount"
                         className={cn(
-                          "h-9",
+                          "h-9 flex-1",
                           theme === "dark" ? "bg-slate-700 text-slate-100 border-slate-600" : "bg-white"
                         )}
                         data-testid="input-payee-amount"
