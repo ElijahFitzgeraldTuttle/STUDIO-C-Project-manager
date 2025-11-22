@@ -271,7 +271,19 @@ export class DatabaseStorage implements IStorage {
 
   async createDashboard(insertDashboard: InsertDashboard): Promise<Dashboard> {
     const result = await db.insert(dashboards).values(insertDashboard).returning();
-    return result[0];
+    const dashboard = result[0];
+    
+    // Create default columns for the new dashboard
+    const defaultColumns = [
+      { dashboardId: dashboard.id, name: "prospect", color: "#f1f5f9", order: 0 },
+      { dashboardId: dashboard.id, name: "scheduled", color: "#fef3c7", order: 1 },
+      { dashboardId: dashboard.id, name: "in-progress", color: "#dbeafe", order: 2 },
+      { dashboardId: dashboard.id, name: "complete", color: "#d1fae5", order: 3 },
+    ];
+    
+    await db.insert(columns).values(defaultColumns);
+    
+    return dashboard;
   }
 
   async updateDashboard(id: number, dashboardUpdate: Partial<InsertDashboard>): Promise<Dashboard | undefined> {

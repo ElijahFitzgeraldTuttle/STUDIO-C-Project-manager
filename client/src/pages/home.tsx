@@ -3,7 +3,7 @@ import { TaskCard } from "@/components/task-card";
 import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Pencil } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { fetchTasks, updateTask, getUnreadCounts, createTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard } from "@/lib/api";
+import { fetchTasks, updateTask, getUnreadCounts, createTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
 import { dbTaskToTask, taskToDbTask, type Task, type Status, statusConfig } from "@/lib/types";
 import { useUser } from "@/contexts/UserContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -167,6 +167,12 @@ export default function Home() {
     setCurrentDashboardId(dashboards[0].id);
   }
 
+  const { data: columns = [] } = useQuery({
+    queryKey: ["columns", currentDashboardId],
+    queryFn: () => fetchColumns(currentDashboardId!),
+    enabled: currentDashboardId !== null,
+  });
+
   const createDashboardMutation = useMutation({
     mutationFn: createDashboard,
     onSuccess: (newDashboard) => {
@@ -245,9 +251,9 @@ export default function Home() {
     const taskId = parseInt(active.id.toString());
     const newStatus = over.id as string;
     
-    // Validate that the drop target is a valid status column
-    const validStatuses: Status[] = ["prospect", "scheduled", "in-progress", "complete"];
-    if (!validStatuses.includes(newStatus as Status)) return;
+    // Validate that the drop target is a valid column
+    const validStatuses = columns.map(col => col.name);
+    if (!validStatuses.includes(newStatus)) return;
     
     const task = tasks.find(t => t.id === taskId);
     if (task && task.status !== newStatus) {
@@ -260,8 +266,6 @@ export default function Home() {
   const handleDragStart = (event: any) => {
     setActiveId(event.active.id);
   };
-
-  const columns: Status[] = ["prospect", "scheduled", "in-progress", "complete"];
 
   if (isLoading) {
     return (
@@ -475,22 +479,28 @@ export default function Home() {
       {/* Board */}
       <main className="max-w-[1800px] mx-auto p-6 overflow-x-auto">
         <div className="flex gap-6 min-w-[1200px]">
-          {columns.map((status) => {
-            const config = statusConfig[status];
-            const columnTasks = tasks.filter(t => t.status === status);
+          {columns.map((column) => {
+            const columnStatus = column.name as Status;
+            const config = statusConfig[columnStatus] || { 
+              label: column.name, 
+              color: "text-slate-600", 
+              bg: "bg-slate-100", 
+              icon: SlidersHorizontal 
+            };
+            const columnTasks = tasks.filter(t => t.status === column.name);
             
             return (
-              <div key={status} className="flex-1 min-w-[300px] flex flex-col h-full">
+              <div key={column.id} className="flex-1 min-w-[300px] flex flex-col h-full">
                 {/* Column Header */}
                 <div className="flex items-center justify-between mb-4 px-1">
                   <div className="flex items-center gap-2">
-                    <div className={cn("p-1.5 rounded-md", config.bg)}>
+                    <div className={cn("p-1.5 rounded-md")} style={{ backgroundColor: column.color }}>
                       <config.icon className={cn("w-4 h-4", config.color)} />
                     </div>
                     <h2 className={cn(
                       "font-semibold text-sm",
                       theme === "dark" ? "text-slate-200" : "text-slate-700"
-                    )}>{config.label}</h2>
+                    )}>{column.name}</h2>
                     <span className={cn(
                       "text-xs font-medium px-2 py-0.5 rounded-full",
                       theme === "dark" ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500"
@@ -505,21 +515,18 @@ export default function Home() {
 
                 {/* Column Content */}
                 <DroppableColumn
-                  id={status}
+                  id={column.name}
                   className={cn(
                     "flex-1 rounded-xl p-3 border flex flex-col gap-3 min-h-[500px] transition-all",
                     // Light theme
                     theme === "light" && "bg-slate-100/50 border-slate-200/60",
-                    theme === "light" && status === 'prospect' && "bg-slate-50/80",
-                    theme === "light" && status === 'scheduled' && "bg-amber-50/30",
-                    theme === "light" && status === 'in-progress' && "bg-blue-50/30",
-                    theme === "light" && status === 'complete' && "bg-emerald-50/30",
                     // Glassmorphism theme
                     theme === "glassmorphism" && "bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl",
                     // Dark theme
                     theme === "dark" && "bg-slate-800/30 backdrop-blur-md border-slate-700/50"
                   )}
-                  data-testid={`column-${status}`}
+                  style={{ backgroundColor: theme === "light" ? column.color + "20" : undefined }}
+                  data-testid={`column-${column.name}`}
                 >
                   <SortableContext items={columnTasks.map(t => t.id.toString())} strategy={verticalListSortingStrategy}>
                     <AnimatePresence mode="popLayout">
@@ -540,17 +547,17 @@ export default function Home() {
                     </div>
                   )}
                   
-                  <Dialog open={isAddTaskOpen && newTaskStatus === status} onOpenChange={(open) => {
+                  <Dialog open={isAddTaskOpen && newTaskStatus === column.name} onOpenChange={(open) => {
                     if (!open) setIsAddTaskOpen(false);
                   }}>
                     <DialogTrigger asChild>
                       <button 
                         onClick={() => {
-                          setNewTaskStatus(status);
+                          setNewTaskStatus(column.name as Status);
                           setIsAddTaskOpen(true);
                         }}
                         className="mt-auto flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-white/50 rounded-lg transition-all border border-transparent hover:border-slate-200/50 group"
-                        data-testid={`button-add-task-${status}`}
+                        data-testid={`button-add-task-${column.name}`}
                       >
                         <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
                         Add Task
