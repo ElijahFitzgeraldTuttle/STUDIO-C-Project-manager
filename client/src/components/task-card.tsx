@@ -449,7 +449,10 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                       value={newSubtaskTitle}
                       onChange={(e) => setNewSubtaskTitle(e.target.value)}
                       placeholder="Add subtask..."
-                      className="h-9 bg-white"
+                      className={cn(
+                        "h-9",
+                        theme === "dark" ? "bg-slate-700 text-slate-100 border-slate-600" : "bg-white"
+                      )}
                       data-testid="input-new-subtask"
                     />
                     <Button 
@@ -491,7 +494,10 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                         onChange={(e) => setPayoutTotal(e.target.value)}
                         onBlur={handleUpdatePayoutTotal}
                         placeholder="0"
-                        className="h-9 bg-white"
+                        className={cn(
+                          "h-9",
+                          theme === "dark" ? "bg-slate-700 text-slate-100 border-slate-600" : "bg-white"
+                        )}
                         data-testid="input-payout-total"
                       />
                     </div>
@@ -549,7 +555,10 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                       value={newPayeeName}
                       onChange={(e) => setNewPayeeName(e.target.value)}
                       placeholder="Payee name"
-                      className="h-9 bg-white"
+                      className={cn(
+                        "h-9",
+                        theme === "dark" ? "bg-slate-700 text-slate-100 border-slate-600" : "bg-white"
+                      )}
                       data-testid="input-payee-name"
                     />
                     <div className="flex gap-2">
@@ -558,7 +567,10 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                         value={newPayeeAmount}
                         onChange={(e) => setNewPayeeAmount(e.target.value)}
                         placeholder="Amount"
-                        className="h-9 bg-white"
+                        className={cn(
+                          "h-9",
+                          theme === "dark" ? "bg-slate-700 text-slate-100 border-slate-600" : "bg-white"
+                        )}
                         data-testid="input-payee-amount"
                       />
                       <Button 
