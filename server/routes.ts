@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTaskSchema, insertCommentSchema, insertSubtaskSchema, insertPayeeSchema, insertDashboardSchema } from "@shared/schema";
+import { insertTaskSchema, insertCommentSchema, insertSubtaskSchema, insertPayeeSchema, insertDashboardSchema, insertColumnSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -323,6 +323,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to delete dashboard" });
+    }
+  });
+
+  // Column routes
+  app.get("/api/dashboards/:dashboardId/columns", async (req, res) => {
+    try {
+      const dashboardId = parseInt(req.params.dashboardId);
+      const columns = await storage.getColumns(dashboardId);
+      res.json(columns);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch columns" });
+    }
+  });
+
+  app.post("/api/dashboards/:dashboardId/columns", async (req, res) => {
+    try {
+      const dashboardId = parseInt(req.params.dashboardId);
+      const validatedData = insertColumnSchema.parse({ ...req.body, dashboardId });
+      const column = await storage.createColumn(validatedData);
+      res.status(201).json(column);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create column" });
+    }
+  });
+
+  app.patch("/api/columns/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertColumnSchema.partial().parse(req.body);
+      const column = await storage.updateColumn(id, validatedData);
+      if (!column) {
+        return res.status(404).json({ error: "Column not found" });
+      }
+      res.json(column);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update column" });
+    }
+  });
+
+  app.delete("/api/columns/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteColumn(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete column" });
     }
   });
 
