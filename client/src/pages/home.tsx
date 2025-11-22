@@ -580,9 +580,6 @@ export default function Home() {
                       {columnTasks.length}
                     </span>
                   </div>
-                  <button className="p-1 hover:bg-slate-200/50 rounded-md text-slate-400 hover:text-slate-600 transition-colors">
-                    <Plus className="w-4 h-4" />
-                  </button>
                 </div>
 
                 {/* Column Content */}
