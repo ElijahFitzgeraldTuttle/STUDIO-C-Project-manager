@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Pencil } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard } from "@/lib/api";
@@ -382,12 +382,10 @@ export default function Home() {
                 />
               </form>
             ) : (
-              <button
+              <div
                 key={dashboard.id}
-                onClick={() => setCurrentDashboardId(dashboard.id)}
-                onDoubleClick={() => startEditingDashboard(dashboard.id, dashboard.name)}
                 className={cn(
-                  "px-4 py-2 rounded-t-lg text-sm font-medium transition-all group relative",
+                  "px-4 py-2 rounded-t-lg text-sm font-medium transition-all group relative flex items-center gap-1 cursor-pointer",
                   currentDashboardId === dashboard.id
                     ? theme === "dark"
                       ? "bg-slate-800 text-white"
@@ -396,22 +394,39 @@ export default function Home() {
                       ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
                 )}
+                onClick={() => setCurrentDashboardId(dashboard.id)}
                 data-testid={`tab-dashboard-${dashboard.id}`}
               >
-                {dashboard.name}
-                {currentDashboardId === dashboard.id && dashboards.length > 1 && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteDashboardMutation.mutate(dashboard.id);
-                    }}
-                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-opacity"
-                    data-testid={`button-delete-dashboard-${dashboard.id}`}
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
+                <span className="flex-1">{dashboard.name}</span>
+                {currentDashboardId === dashboard.id && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditingDashboard(dashboard.id, dashboard.name);
+                      }}
+                      className="inline-flex items-center justify-center w-4 h-4 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-opacity"
+                      data-testid={`button-rename-dashboard-${dashboard.id}`}
+                      title="Rename dashboard"
+                    >
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                    {dashboards.length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteDashboardMutation.mutate(dashboard.id);
+                        }}
+                        className="inline-flex items-center justify-center w-4 h-4 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-opacity"
+                        data-testid={`button-delete-dashboard-${dashboard.id}`}
+                        title="Delete dashboard"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </>
                 )}
-              </button>
+              </div>
             )
           ))}
           {showDashboardInput ? (
