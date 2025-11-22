@@ -101,6 +101,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mark comment as read
+  app.post("/api/comments/:id/read", async (req, res) => {
+    try {
+      const commentId = parseInt(req.params.id);
+      const { userName } = req.body;
+      
+      if (!userName) {
+        return res.status(400).json({ error: "userName is required" });
+      }
+
+      await storage.markCommentAsRead(commentId, userName);
+      res.status(200).json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark comment as read" });
+    }
+  });
+
+  // Mark all task comments as read
+  app.post("/api/tasks/:id/comments/read-all", async (req, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const { userName } = req.body;
+      
+      if (!userName) {
+        return res.status(400).json({ error: "userName is required" });
+      }
+
+      await storage.markAllTaskCommentsAsRead(taskId, userName);
+      res.status(200).json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark comments as read" });
+    }
+  });
+
+  // Get unread comment counts per task
+  app.get("/api/unread-counts", async (req, res) => {
+    try {
+      const userName = req.query.userName as string;
+      
+      if (!userName) {
+        return res.status(400).json({ error: "userName is required" });
+      }
+
+      const counts = await storage.getUnreadCommentCounts(userName);
+      const countsObj = Object.fromEntries(counts);
+      res.json(countsObj);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch unread counts" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

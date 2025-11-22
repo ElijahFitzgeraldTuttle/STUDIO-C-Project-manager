@@ -50,3 +50,18 @@ export async function createComment(taskId: number, comment: Omit<InsertComment,
   if (!response.ok) throw new Error("Failed to create comment");
   return response.json();
 }
+
+export async function markAllTaskCommentsAsRead(taskId: number, userName: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/tasks/${taskId}/comments/read-all`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userName }),
+  });
+  if (!response.ok) throw new Error("Failed to mark comments as read");
+}
+
+export async function getUnreadCounts(userName: string): Promise<Record<number, number>> {
+  const response = await fetch(`${API_BASE}/unread-counts?userName=${encodeURIComponent(userName)}`);
+  if (!response.ok) throw new Error("Failed to fetch unread counts");
+  return response.json();
+}

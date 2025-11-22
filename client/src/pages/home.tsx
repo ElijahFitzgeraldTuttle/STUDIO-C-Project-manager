@@ -1,17 +1,60 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { fetchTasks, updateTask } from "@/lib/api";
+import { fetchTasks, updateTask, getUnreadCounts } from "@/lib/api";
 import { dbTaskToTask, taskToDbTask, type Task, type Status, statusConfig } from "@/lib/types";
+import { useUser } from "@/contexts/UserContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+function UserAvatar() {
+  const { currentUser, logout } = useUser();
+
+  if (!currentUser) return null;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="outline-none">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 border-2 border-white shadow-md flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:scale-105 transition-transform">
+          {currentUser.charAt(0)}
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <div className="px-2 py-1.5 text-sm">
+          <div className="font-medium text-slate-900">{currentUser}</div>
+          <div className="text-xs text-slate-500">Team Member</div>
+        </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
+          <LogOut className="w-4 h-4 mr-2" />
+          Switch User
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export default function Home() {
   const queryClient = useQueryClient();
+  const { currentUser } = useUser();
 
   const { data: dbTasks = [], isLoading } = useQuery({
     queryKey: ["tasks"],
     queryFn: fetchTasks,
+  });
+
+  const { data: unreadCounts = {} } = useQuery({
+    queryKey: ["unreadCounts", currentUser],
+    queryFn: () => getUnreadCounts(currentUser!),
+    enabled: !!currentUser,
+    refetchInterval: 10000, // Refetch every 10 seconds
   });
 
   const tasks = dbTasks.map(dbTaskToTask);
@@ -64,9 +107,7 @@ export default function Home() {
             <button className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors">
               <SlidersHorizontal className="w-5 h-5" />
             </button>
-            <div className="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-700 font-medium text-sm">
-              JD
-            </div>
+            <UserAvatar />
           </div>
         </div>
       </header>
@@ -109,7 +150,8 @@ export default function Home() {
                       <TaskCard 
                         key={task.id} 
                         task={task} 
-                        onUpdate={handleUpdateTask} 
+                        onUpdate={handleUpdateTask}
+                        unreadCount={unreadCounts[task.id] || 0}
                       />
                     ))}
                   </AnimatePresence>

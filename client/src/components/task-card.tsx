@@ -1,5 +1,5 @@
 import { type Task, type TaskTracking, type Comment, statusConfig } from "@/lib/types";
-import { MoreHorizontal, User, CheckCircle2, MessageSquare, Send } from "lucide-react";
+import { MoreHorizontal, User, CheckCircle2, MessageSquare, Send, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,17 +22,21 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchComments, createComment } from "@/lib/api";
+import { fetchComments, createComment, markAllTaskCommentsAsRead } from "@/lib/api";
 import { dbCommentToComment } from "@/lib/types";
+import { useUser } from "@/contexts/UserContext";
 
 interface TaskCardProps {
   task: Task;
   onUpdate: (task: Task) => void;
+  unreadCount?: number;
 }
 
-export function TaskCard({ task, onUpdate }: TaskCardProps) {
+export function TaskCard({ task, onUpdate, unreadCount = 0 }: TaskCardProps) {
   const [newComment, setNewComment] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { currentUser } = useUser();
   
   const { data: dbComments = [] } = useQuery({
     queryKey: ["comments", task.id],
@@ -44,11 +48,38 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
 
   const createCommentMutation = useMutation({
     mutationFn: (text: string) =>
-      createComment(task.id, { author: "You", text }),
+      createComment(task.id, { author: currentUser!, text }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", task.id] });
+      queryClient.invalidateQueries({ queryKey: ["unreadCounts", currentUser] });
     },
   });
+
+  const markAsReadMutation = useMutation({
+    mutationFn: () => markAllTaskCommentsAsRead(task.id, currentUser!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["unreadCounts", currentUser] });
+    },
+  });
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open && unreadCount > 0 && currentUser) {
+      // Optimistically clear the unread count immediately
+      queryClient.setQueryData(
+        ["unreadCounts", currentUser],
+        (old: Record<number, number> | undefined) => {
+          if (!old) return old;
+          const updated = { ...old };
+          delete updated[task.id];
+          return updated;
+        }
+      );
+      
+      // Mark comments as read in the background
+      markAsReadMutation.mutate();
+    }
+  };
 
   const handleTrackingChange = (key: keyof TaskTracking, checked: boolean) => {
     onUpdate({
@@ -77,7 +108,7 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
   const StatusIcon = statusConfig[task.status].icon;
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <motion.div
           layoutId={task.id.toString()}
@@ -151,12 +182,22 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
               )}
             </div>
             
-            {comments.length > 0 && (
-              <div className="flex items-center gap-1 text-xs text-slate-400">
-                <MessageSquare className="w-3 h-3" />
-                <span>{comments.length}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {comments.length > 0 && (
+                <div className="flex items-center gap-1 text-xs text-slate-400">
+                  <MessageSquare className="w-3 h-3" />
+                  <span>{comments.length}</span>
+                </div>
+              )}
+              {unreadCount > 0 && (
+                <div className="relative">
+                  <Bell className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
+                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-indigo-600 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </motion.div>
       </DialogTrigger>
