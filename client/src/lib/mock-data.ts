@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, CircleDashed, Plus, MoreHorizontal, Calendar, User, FileText, LayoutDashboard, Send } from "lucide-react";
+import { CheckCircle2, Clock, FileText, Calendar } from "lucide-react";
 
 export type Status = "prospect" | "scheduled" | "in-progress" | "complete";
 
@@ -9,15 +9,22 @@ export interface TaskTracking {
   distributed: boolean;
 }
 
+export interface Comment {
+  id: string;
+  author: string;
+  text: string;
+  timestamp: string;
+}
+
 export interface Task {
   id: string;
   title: string;
   description: string;
   status: Status;
   assignee?: string;
-  dueDate?: string;
   tags: string[];
   tracking: TaskTracking;
+  comments: Comment[];
 }
 
 export const initialTasks: Task[] = [
@@ -27,14 +34,21 @@ export const initialTasks: Task[] = [
     description: "Review current component library and identify inconsistencies in spacing and typography.",
     status: "in-progress",
     assignee: "Alex",
-    dueDate: "Tomorrow",
     tags: ["Design", "Audit"],
     tracking: {
       delivered: false,
       invoiced: false,
       paid: false,
       distributed: false
-    }
+    },
+    comments: [
+      {
+        id: "c1",
+        author: "Alex",
+        text: "Started reviewing the typography scale. Found some inconsistencies in mobile headings.",
+        timestamp: "2h ago"
+      }
+    ]
   },
   {
     id: "2",
@@ -42,14 +56,14 @@ export const initialTasks: Task[] = [
     description: "Schedule and conduct interviews with 5 active users to gather feedback on the new dashboard.",
     status: "scheduled",
     assignee: "Sam",
-    dueDate: "Next Week",
     tags: ["Research"],
     tracking: {
       delivered: false,
       invoiced: false,
       paid: false,
       distributed: false
-    }
+    },
+    comments: []
   },
   {
     id: "3",
@@ -62,7 +76,8 @@ export const initialTasks: Task[] = [
       invoiced: false,
       paid: false,
       distributed: false
-    }
+    },
+    comments: []
   },
   {
     id: "4",
@@ -70,14 +85,21 @@ export const initialTasks: Task[] = [
     description: "Draft initial outline for Q3 content strategy and social media calendar.",
     status: "complete",
     assignee: "Jordan",
-    dueDate: "Yesterday",
     tags: ["Marketing"],
     tracking: {
       delivered: true,
       invoiced: true,
       paid: false,
       distributed: false
-    }
+    },
+    comments: [
+      {
+        id: "c2",
+        author: "Jordan",
+        text: "Draft is ready for review in the shared folder.",
+        timestamp: "1d ago"
+      }
+    ]
   },
   {
     id: "5",
@@ -90,7 +112,8 @@ export const initialTasks: Task[] = [
       invoiced: true,
       paid: true,
       distributed: true
-    }
+    },
+    comments: []
   },
   {
     id: "6",
@@ -104,7 +127,8 @@ export const initialTasks: Task[] = [
       invoiced: false,
       paid: false,
       distributed: false
-    }
+    },
+    comments: []
   }
 ];
 
