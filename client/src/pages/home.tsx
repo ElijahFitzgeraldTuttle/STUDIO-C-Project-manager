@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
 
-  const handleStatusChange = (id: string, newStatus: Status) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, status: newStatus } : t));
+  const handleUpdateTask = (updatedTask: Task) => {
+    setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
   };
 
   const columns: Status[] = ["todo", "in-progress", "done"];
@@ -85,7 +85,7 @@ export default function Home() {
                       <TaskCard 
                         key={task.id} 
                         task={task} 
-                        onStatusChange={handleStatusChange} 
+                        onUpdate={handleUpdateTask} 
                       />
                     ))}
                   </AnimatePresence>

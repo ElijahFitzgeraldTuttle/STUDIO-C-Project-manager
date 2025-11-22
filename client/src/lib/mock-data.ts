@@ -3,6 +3,13 @@ import { CheckCircle2, Clock, CircleDashed, Plus, MoreHorizontal, Calendar, User
 export type Priority = "low" | "medium" | "high";
 export type Status = "todo" | "in-progress" | "done";
 
+export interface TaskTracking {
+  delivered: boolean;
+  invoiced: boolean;
+  paid: boolean;
+  distributed: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -12,6 +19,7 @@ export interface Task {
   assignee?: string;
   dueDate?: string;
   tags: string[];
+  tracking: TaskTracking;
 }
 
 export const initialTasks: Task[] = [
@@ -23,7 +31,13 @@ export const initialTasks: Task[] = [
     priority: "high",
     assignee: "Alex",
     dueDate: "Tomorrow",
-    tags: ["Design", "Audit"]
+    tags: ["Design", "Audit"],
+    tracking: {
+      delivered: false,
+      invoiced: false,
+      paid: false,
+      distributed: false
+    }
   },
   {
     id: "2",
@@ -33,7 +47,13 @@ export const initialTasks: Task[] = [
     priority: "medium",
     assignee: "Sam",
     dueDate: "Next Week",
-    tags: ["Research"]
+    tags: ["Research"],
+    tracking: {
+      delivered: false,
+      invoiced: false,
+      paid: false,
+      distributed: false
+    }
   },
   {
     id: "3",
@@ -41,7 +61,13 @@ export const initialTasks: Task[] = [
     description: "Mobile menu doesn't close when clicking outside the drawer on iOS devices.",
     status: "todo",
     priority: "high",
-    tags: ["Bug", "Mobile"]
+    tags: ["Bug", "Mobile"],
+    tracking: {
+      delivered: false,
+      invoiced: false,
+      paid: false,
+      distributed: false
+    }
   },
   {
     id: "4",
@@ -51,7 +77,13 @@ export const initialTasks: Task[] = [
     priority: "medium",
     assignee: "Jordan",
     dueDate: "Yesterday",
-    tags: ["Marketing"]
+    tags: ["Marketing"],
+    tracking: {
+      delivered: true,
+      invoiced: true,
+      paid: false,
+      distributed: false
+    }
   },
   {
     id: "5",
@@ -59,7 +91,13 @@ export const initialTasks: Task[] = [
     description: "Bump React and other core libraries to latest stable versions.",
     status: "done",
     priority: "low",
-    tags: ["DevOps"]
+    tags: ["DevOps"],
+    tracking: {
+      delivered: true,
+      invoiced: true,
+      paid: true,
+      distributed: true
+    }
   },
   {
     id: "6",
@@ -68,7 +106,13 @@ export const initialTasks: Task[] = [
     status: "in-progress",
     priority: "high",
     assignee: "Alex",
-    tags: ["Feature", "UI"]
+    tags: ["Feature", "UI"],
+    tracking: {
+      delivered: true,
+      invoiced: false,
+      paid: false,
+      distributed: false
+    }
   }
 ];
 

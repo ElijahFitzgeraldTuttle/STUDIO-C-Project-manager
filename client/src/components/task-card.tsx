@@ -1,21 +1,33 @@
-import { Task, priorityConfig, statusConfig } from "@/lib/mock-data";
+import { Task, priorityConfig, statusConfig, TaskTracking } from "@/lib/mock-data";
 import { Calendar, MoreHorizontal, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
 
 interface TaskCardProps {
   task: Task;
-  onStatusChange: (id: string, status: Task["status"]) => void;
+  onUpdate: (task: Task) => void;
 }
 
-export function TaskCard({ task, onStatusChange }: TaskCardProps) {
+export function TaskCard({ task, onUpdate }: TaskCardProps) {
   const statusColors = statusConfig[task.status];
+
+  const handleTrackingChange = (key: keyof TaskTracking, checked: boolean) => {
+    onUpdate({
+      ...task,
+      tracking: {
+        ...task.tracking,
+        [key]: checked
+      }
+    });
+  };
 
   return (
     <motion.div
@@ -40,13 +52,13 @@ export function TaskCard({ task, onStatusChange }: TaskCardProps) {
             <MoreHorizontal className="w-4 h-4 text-slate-400" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onStatusChange(task.id, "todo")}>
+            <DropdownMenuItem onClick={() => onUpdate({ ...task, status: "todo" })}>
               Move to To Do
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onStatusChange(task.id, "in-progress")}>
+            <DropdownMenuItem onClick={() => onUpdate({ ...task, status: "in-progress" })}>
               Move to In Progress
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onStatusChange(task.id, "done")}>
+            <DropdownMenuItem onClick={() => onUpdate({ ...task, status: "done" })}>
               Move to Done
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -60,7 +72,27 @@ export function TaskCard({ task, onStatusChange }: TaskCardProps) {
         {task.description}
       </p>
 
-      <div className="flex items-center justify-between pt-3 border-t border-slate-50 mt-auto">
+      {/* Tracking Checkboxes */}
+      <div className="grid grid-cols-2 gap-2 mb-3 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
+        {Object.entries(task.tracking).map(([key, value]) => (
+          <div key={key} className="flex items-center gap-2">
+            <Checkbox 
+              id={`tracking-${task.id}-${key}`} 
+              checked={value}
+              onCheckedChange={(checked) => handleTrackingChange(key as keyof TaskTracking, checked === true)}
+              className="h-3 w-3"
+            />
+            <Label 
+              htmlFor={`tracking-${task.id}-${key}`}
+              className="text-[10px] text-slate-600 capitalize cursor-pointer font-medium"
+            >
+              {key}
+            </Label>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between pt-2 mt-auto">
         <div className="flex items-center gap-2">
           {task.assignee && (
             <div className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded-md">
