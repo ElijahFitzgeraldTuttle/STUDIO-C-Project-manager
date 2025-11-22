@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { tasks, comments, commentReads, subtasks, payouts, payees, dashboards, type Task, type InsertTask, type Comment, type InsertComment, type InsertCommentRead, type Subtask, type InsertSubtask, type Payout, type InsertPayout, type Payee, type InsertPayee, type Dashboard, type InsertDashboard } from "@shared/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, isNull } from "drizzle-orm";
 
 export interface IStorage {
   // Task operations
@@ -35,12 +35,16 @@ export interface IStorage {
   // Dashboard operations
   getDashboards(): Promise<Dashboard[]>;
   createDashboard(dashboard: InsertDashboard): Promise<Dashboard>;
+  updateDashboard(id: number, dashboard: Partial<InsertDashboard>): Promise<Dashboard | undefined>;
   deleteDashboard(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
   async getTasks(dashboardId?: number | null): Promise<Task[]> {
     if (dashboardId !== undefined) {
+      if (dashboardId === null) {
+        return await db.select().from(tasks).where(isNull(tasks.dashboardId)).orderBy(tasks.createdAt);
+      }
       return await db.select().from(tasks).where(eq(tasks.dashboardId, dashboardId)).orderBy(tasks.createdAt);
     }
     return await db.select().from(tasks).orderBy(tasks.createdAt);
@@ -261,6 +265,15 @@ export class DatabaseStorage implements IStorage {
 
   async createDashboard(insertDashboard: InsertDashboard): Promise<Dashboard> {
     const result = await db.insert(dashboards).values(insertDashboard).returning();
+    return result[0];
+  }
+
+  async updateDashboard(id: number, dashboardUpdate: Partial<InsertDashboard>): Promise<Dashboard | undefined> {
+    const result = await db
+      .update(dashboards)
+      .set(dashboardUpdate)
+      .where(eq(dashboards.id, id))
+      .returning();
     return result[0];
   }
 

@@ -3,7 +3,7 @@ import { TaskCard } from "@/components/task-card";
 import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { fetchTasks, updateTask, getUnreadCounts, createTask, fetchDashboards, createDashboard, deleteDashboard } from "@/lib/api";
+import { fetchTasks, updateTask, getUnreadCounts, createTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard } from "@/lib/api";
 import { dbTaskToTask, taskToDbTask, type Task, type Status, statusConfig } from "@/lib/types";
 import { useUser } from "@/contexts/UserContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -113,6 +113,8 @@ export default function Home() {
   const [currentDashboardId, setCurrentDashboardId] = useState<number | null>(null);
   const [newDashboardName, setNewDashboardName] = useState("");
   const [showDashboardInput, setShowDashboardInput] = useState(false);
+  const [editingDashboardId, setEditingDashboardId] = useState<number | null>(null);
+  const [editingDashboardName, setEditingDashboardName] = useState("");
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -175,6 +177,15 @@ export default function Home() {
     },
   });
 
+  const updateDashboardMutation = useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) => updateDashboard(id, { name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dashboards"] });
+      setEditingDashboardId(null);
+      setEditingDashboardName("");
+    },
+  });
+
   const deleteDashboardMutation = useMutation({
     mutationFn: deleteDashboard,
     onSuccess: () => {
@@ -191,6 +202,17 @@ export default function Home() {
     e.preventDefault();
     if (!newDashboardName.trim()) return;
     createDashboardMutation.mutate({ name: newDashboardName });
+  };
+
+  const handleRenameDashboard = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDashboardName.trim() || editingDashboardId === null) return;
+    updateDashboardMutation.mutate({ id: editingDashboardId, name: editingDashboardName });
+  };
+
+  const startEditingDashboard = (id: number, name: string) => {
+    setEditingDashboardId(id);
+    setEditingDashboardName(name);
   };
 
   const handleUpdateTask = (updatedTask: Task) => {
@@ -272,11 +294,10 @@ export default function Home() {
 
         {/* Dark Mode Background */}
         {theme === "dark" && (
-          <div className="fixed inset-0 -z-10">
-            <img 
-              src="/dark-bg.jpg" 
-              alt="" 
-              className="w-full h-full object-cover opacity-50"
+          <div key="dark-bg" className="fixed inset-0 -z-10">
+            <div 
+              className="w-full h-full bg-cover bg-center opacity-50"
+              style={{ backgroundImage: 'url(/dark-bg.jpg)' }}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 via-slate-900/70 to-slate-900/90"></div>
           </div>
@@ -342,35 +363,56 @@ export default function Home() {
       )}>
         <div className="max-w-[1800px] mx-auto flex items-center gap-2">
           {dashboards.map(dashboard => (
-            <button
-              key={dashboard.id}
-              onClick={() => setCurrentDashboardId(dashboard.id)}
-              className={cn(
-                "px-4 py-2 rounded-t-lg text-sm font-medium transition-all group relative",
-                currentDashboardId === dashboard.id
-                  ? theme === "dark"
-                    ? "bg-slate-800 text-white"
-                    : "bg-white text-slate-900 shadow-sm"
-                  : theme === "dark"
-                    ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-              )}
-              data-testid={`tab-dashboard-${dashboard.id}`}
-            >
-              {dashboard.name}
-              {currentDashboardId === dashboard.id && dashboards.length > 1 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteDashboardMutation.mutate(dashboard.id);
+            editingDashboardId === dashboard.id ? (
+              <form key={dashboard.id} onSubmit={handleRenameDashboard} className="flex items-center gap-2">
+                <Input
+                  value={editingDashboardName}
+                  onChange={(e) => setEditingDashboardName(e.target.value)}
+                  className="h-8 w-32"
+                  autoFocus
+                  onBlur={() => {
+                    if (editingDashboardName.trim()) {
+                      handleRenameDashboard(new Event('submit') as any);
+                    } else {
+                      setEditingDashboardId(null);
+                      setEditingDashboardName("");
+                    }
                   }}
-                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-opacity"
-                  data-testid={`button-delete-dashboard-${dashboard.id}`}
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-            </button>
+                  data-testid={`input-rename-dashboard-${dashboard.id}`}
+                />
+              </form>
+            ) : (
+              <button
+                key={dashboard.id}
+                onClick={() => setCurrentDashboardId(dashboard.id)}
+                onDoubleClick={() => startEditingDashboard(dashboard.id, dashboard.name)}
+                className={cn(
+                  "px-4 py-2 rounded-t-lg text-sm font-medium transition-all group relative",
+                  currentDashboardId === dashboard.id
+                    ? theme === "dark"
+                      ? "bg-slate-800 text-white"
+                      : "bg-white text-slate-900 shadow-sm"
+                    : theme === "dark"
+                      ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
+                )}
+                data-testid={`tab-dashboard-${dashboard.id}`}
+              >
+                {dashboard.name}
+                {currentDashboardId === dashboard.id && dashboards.length > 1 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteDashboardMutation.mutate(dashboard.id);
+                    }}
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-opacity"
+                    data-testid={`button-delete-dashboard-${dashboard.id}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </button>
+            )
           ))}
           {showDashboardInput ? (
             <form onSubmit={handleCreateDashboard} className="flex items-center gap-2">

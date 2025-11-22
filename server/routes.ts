@@ -299,6 +299,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/dashboards/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertDashboardSchema.partial().parse(req.body);
+      const dashboard = await storage.updateDashboard(id, validatedData);
+      if (!dashboard) {
+        return res.status(404).json({ error: "Dashboard not found" });
+      }
+      res.json(dashboard);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update dashboard" });
+    }
+  });
+
   app.delete("/api/dashboards/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);

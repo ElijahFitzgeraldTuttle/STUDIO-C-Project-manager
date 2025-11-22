@@ -161,6 +161,16 @@ export async function createDashboard(dashboard: InsertDashboard): Promise<Dashb
   return response.json();
 }
 
+export async function updateDashboard(id: number, dashboard: Partial<InsertDashboard>): Promise<Dashboard> {
+  const response = await fetch(`${API_BASE}/dashboards/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dashboard),
+  });
+  if (!response.ok) throw new Error("Failed to update dashboard");
+  return response.json();
+}
+
 export async function deleteDashboard(id: number): Promise<void> {
   const response = await fetch(`${API_BASE}/dashboards/${id}`, {
     method: "DELETE",
