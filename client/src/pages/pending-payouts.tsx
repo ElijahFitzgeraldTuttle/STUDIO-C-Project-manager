@@ -87,8 +87,8 @@ export default function PendingPayouts() {
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
                 theme === "light" && "hover:bg-slate-100 text-slate-700",
-                theme === "glassmorphism" && "bg-white/40 backdrop-blur-sm hover:bg-white/60 border border-white/30",
-                theme === "dark" && "hover:bg-slate-800/50 text-slate-300"
+                theme === "glassmorphism" && "bg-white/70 backdrop-blur-sm hover:bg-white/90 border border-white/30",
+                theme === "dark" && "bg-slate-800/70 hover:bg-slate-800/90 text-slate-300"
               )}
               data-testid="button-back"
             >
@@ -104,8 +104,8 @@ export default function PendingPayouts() {
             <div className={cn(
               "mb-6 p-6 rounded-lg border",
               theme === "light" && "bg-blue-50 border-blue-200",
-              theme === "glassmorphism" && "bg-white/40 backdrop-blur-md border-white/30 shadow-lg",
-              theme === "dark" && "bg-blue-900/20 border-blue-800/50"
+              theme === "glassmorphism" && "bg-white/80 backdrop-blur-md border-white/30 shadow-lg",
+              theme === "dark" && "bg-blue-900/70 border-blue-800/50"
             )}>
               <div className="flex items-center gap-3">
                 <DollarSign className={cn(
@@ -136,16 +136,16 @@ export default function PendingPayouts() {
                   className={cn(
                     "rounded-lg border overflow-hidden",
                     theme === "light" && "bg-white border-slate-200",
-                    theme === "glassmorphism" && "bg-white/40 backdrop-blur-md border-white/30 shadow-lg",
-                    theme === "dark" && "bg-slate-800/50 border-slate-700/50"
+                    theme === "glassmorphism" && "bg-white/80 backdrop-blur-md border-white/30 shadow-lg",
+                    theme === "dark" && "bg-slate-800/90 border-slate-700/50"
                   )}
                   data-testid={`card-payee-${payeeGroup.name}`}
                 >
                   <div className={cn(
                     "px-6 py-4 border-b",
                     theme === "light" && "bg-slate-50 border-slate-200",
-                    theme === "glassmorphism" && "bg-white/30 border-white/20",
-                    theme === "dark" && "bg-slate-900/50 border-slate-700/50"
+                    theme === "glassmorphism" && "bg-white/60 border-white/20",
+                    theme === "dark" && "bg-slate-900/80 border-slate-700/50"
                   )}>
                     <div className="flex items-center justify-between">
                       <h2 className="text-xl font-semibold" data-testid={`text-payee-name-${payeeGroup.name}`}>
@@ -172,8 +172,8 @@ export default function PendingPayouts() {
                         className={cn(
                           "px-6 py-4 transition-colors",
                           theme === "light" && "hover:bg-slate-50",
-                          theme === "glassmorphism" && "hover:bg-white/30",
-                          theme === "dark" && "hover:bg-slate-900/30"
+                          theme === "glassmorphism" && "hover:bg-white/50",
+                          theme === "dark" && "hover:bg-slate-900/50"
                         )}
                         data-testid={`row-task-${task.taskId}`}
                       >
