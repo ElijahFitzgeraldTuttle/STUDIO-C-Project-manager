@@ -19,29 +19,24 @@ export default function PendingPayouts() {
   if (isLoading) {
     return (
       <div className={cn(
-        "min-h-screen flex items-center justify-center font-sans transition-colors duration-500 relative overflow-hidden",
+        "min-h-screen flex items-center justify-center font-sans transition-colors duration-500 relative",
         theme === "light" && !plainLayout && "bg-slate-50 text-slate-900",
         theme === "light" && plainLayout && "bg-white text-slate-900",
         theme === "dark" && plainLayout && "bg-slate-950 text-slate-100",
         theme === "dark" && !plainLayout && "bg-transparent text-slate-100"
       )}>
         {/* Background Image (only when not in plain layout) */}
-        {!plainLayout && theme === "dark" && (
-          <div key="dark-bg" className="fixed inset-0 -z-10">
+        {!plainLayout && (
+          <div className="fixed inset-0 -z-10 pointer-events-none">
             <div 
               className="w-full h-full bg-cover bg-center"
               style={{ backgroundImage: 'url(/dark-bg-default.png)' }}
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 via-slate-900/20 to-slate-900/30"></div>
-          </div>
-        )}
-        {!plainLayout && theme === "light" && (
-          <div key="light-bg" className="fixed inset-0 -z-10">
-            <div 
-              className="w-full h-full bg-cover bg-center"
-              style={{ backgroundImage: 'url(/dark-bg-default.png)' }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/80 to-white/90"></div>
+            <div className={cn(
+              "absolute inset-0",
+              theme === "dark" && "bg-gradient-to-b from-slate-900/5 via-slate-900/10 to-slate-900/15",
+              theme === "light" && "bg-gradient-to-b from-white/60 via-white/70 to-white/75"
+            )}></div>
           </div>
         )}
         <div className="text-lg">Loading pending payouts...</div>
@@ -53,29 +48,24 @@ export default function PendingPayouts() {
 
   return (
     <div className={cn(
-      "min-h-screen p-8 font-sans transition-colors duration-500 relative overflow-hidden",
+      "min-h-screen p-8 font-sans transition-colors duration-500 relative isolate",
       theme === "light" && !plainLayout && "bg-slate-50 text-slate-900",
       theme === "light" && plainLayout && "bg-white text-slate-900",
       theme === "dark" && plainLayout && "bg-slate-950 text-slate-100",
       theme === "dark" && !plainLayout && "bg-transparent text-slate-100"
     )}>
       {/* Background Image (only when not in plain layout) */}
-      {!plainLayout && theme === "dark" && (
-        <div key="dark-bg" className="fixed inset-0 -z-10">
+      {!plainLayout && (
+        <div className="fixed inset-0 -z-10 pointer-events-none">
           <div 
             className="w-full h-full bg-cover bg-center"
             style={{ backgroundImage: 'url(/dark-bg-default.png)' }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 via-slate-900/20 to-slate-900/30"></div>
-        </div>
-      )}
-      {!plainLayout && theme === "light" && (
-        <div key="light-bg" className="fixed inset-0 -z-10">
-          <div 
-            className="w-full h-full bg-cover bg-center"
-            style={{ backgroundImage: 'url(/dark-bg-default.png)' }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/80 to-white/90"></div>
+          <div className={cn(
+            "absolute inset-0",
+            theme === "dark" && "bg-gradient-to-b from-slate-900/5 via-slate-900/10 to-slate-900/15",
+            theme === "light" && "bg-gradient-to-b from-white/60 via-white/70 to-white/75"
+          )}></div>
         </div>
       )}
       <div className="max-w-6xl mx-auto">

@@ -487,7 +487,7 @@ export default function Home() {
     >
       <div 
         className={cn(
-          "min-h-screen font-sans transition-colors duration-500 relative overflow-hidden",
+          "min-h-screen font-sans transition-colors duration-500 relative isolate",
           theme === "light" && !plainLayout && "bg-slate-50 text-slate-900",
           theme === "light" && plainLayout && "bg-white text-slate-900",
           theme === "dark" && plainLayout && "bg-slate-950 text-slate-100",
@@ -495,26 +495,19 @@ export default function Home() {
         )}
       >
         {/* Background Image (only when not in plain layout) */}
-        {!plainLayout && theme === "dark" && (
-          <div key="dark-bg" className="fixed inset-0 -z-10">
+        {!plainLayout && (
+          <div className="fixed inset-0 -z-10 pointer-events-none">
             <div 
               className="w-full h-full bg-cover bg-center"
               style={{ 
                 backgroundImage: 'url(/dark-bg-default.png)'
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 via-slate-900/20 to-slate-900/30"></div>
-          </div>
-        )}
-        {!plainLayout && theme === "light" && (
-          <div key="light-bg" className="fixed inset-0 -z-10">
-            <div 
-              className="w-full h-full bg-cover bg-center"
-              style={{ 
-                backgroundImage: 'url(/dark-bg-default.png)'
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/80 to-white/90"></div>
+            <div className={cn(
+              "absolute inset-0",
+              theme === "dark" && "bg-gradient-to-b from-slate-900/5 via-slate-900/10 to-slate-900/15",
+              theme === "light" && "bg-gradient-to-b from-white/60 via-white/70 to-white/75"
+            )}></div>
           </div>
         )}
         {/* Header */}
@@ -831,8 +824,8 @@ export default function Home() {
                 {/* Column Header */}
                 <div className={cn(
                   "flex items-center justify-between mb-4 p-3 rounded-xl border",
-                  theme === "light" && "bg-white border-slate-100 shadow-md",
-                  theme === "dark" && "bg-slate-800/80 border-slate-700/70 shadow-lg shadow-black/40"
+                  theme === "light" && "bg-white border-slate-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)]",
+                  theme === "dark" && "bg-slate-800/90 border-slate-700/80 shadow-[0_4px_16px_rgba(0,0,0,0.15)]"
                 )}>
                   <div className="flex items-center gap-2">
                     <div className={cn("p-1.5 rounded-md")} style={{ backgroundColor: column.color }}>
@@ -857,9 +850,9 @@ export default function Home() {
                   className={cn(
                     "flex-1 rounded-xl p-3 border flex flex-col gap-3 min-h-[500px] transition-all",
                     // Light theme
-                    theme === "light" && "bg-slate-100/50 border-slate-200/60 shadow-lg shadow-slate-200/60",
+                    theme === "light" && "bg-slate-50/80 border-slate-200/80 shadow-[0_8px_24px_rgba(0,0,0,0.06)]",
                     // Dark theme
-                    theme === "dark" && "bg-slate-800/30 backdrop-blur-md border-slate-700/50 shadow-2xl shadow-black/50"
+                    theme === "dark" && "bg-slate-800/40 backdrop-blur-sm border-slate-700/70 shadow-[0_12px_32px_rgba(0,0,0,0.2)]"
                   )}
                   style={{ backgroundColor: theme === "light" ? column.color + "20" : undefined }}
                   data-testid={`column-${column.name}`}
