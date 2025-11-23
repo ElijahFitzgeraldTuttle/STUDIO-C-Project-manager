@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Mountain, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, HelpCircle, Sun, Moon } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Mountain, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, Apple, Sun, Moon } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask, deleteTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
@@ -645,7 +645,7 @@ export default function Home() {
               title={repelMode ? "Disable Repel Mode" : "Enable Repel Mode"}
               data-testid="button-repel-mode"
             >
-              <HelpCircle className="w-5 h-5" />
+              <Apple className="w-5 h-5" />
             </button>
             <button 
               onClick={() => setIsColumnSettingsOpen(true)}
