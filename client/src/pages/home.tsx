@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Mountain, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, HelpCircle } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Mountain, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, HelpCircle, Sun, Moon } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask, deleteTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
@@ -202,6 +202,23 @@ export default function Home() {
     const newValue = !plainLayout;
     setPlainLayout(newValue);
     localStorage.setItem("plainLayout", String(newValue));
+  };
+
+  const cycleLayoutMode = () => {
+    // Cycle through: Mountain background -> Plain Light -> Plain Dark -> Mountain
+    if (!plainLayout) {
+      // Currently showing mountain background, switch to plain light
+      setPlainLayout(true);
+      if (theme === "dark") {
+        toggleDarkMode(); // Switch to light
+      }
+    } else if (theme === "light") {
+      // Currently plain light, switch to plain dark
+      toggleDarkMode();
+    } else {
+      // Currently plain dark, switch back to mountain background
+      setPlainLayout(false);
+    }
   };
 
   const toggleRepelMode = () => {
@@ -599,32 +616,33 @@ export default function Home() {
               </button>
             </Link>
             <button 
-              onClick={toggleDarkMode}
+              onClick={cycleLayoutMode}
+              className={cn(
+                "p-2 rounded-full transition-all",
+                plainLayout && theme === "dark"
+                  ? "bg-slate-800 text-slate-300 shadow-lg"
+                  : plainLayout && theme === "light"
+                    ? "bg-amber-400 text-slate-900 shadow-lg"
+                    : theme === "dark" 
+                      ? "text-slate-400 hover:bg-slate-800" 
+                      : "text-slate-500 hover:bg-slate-100"
+              )}
+              title={!plainLayout ? "Switch to Plain Layout" : theme === "light" ? "Switch to Dark" : "Switch to Mountain Background"}
+              data-testid="button-layout-mode"
+            >
+              {!plainLayout ? <Sun className="w-5 h-5" /> : theme === "light" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button 
               className={cn(
                 "p-2 rounded-full transition-all",
                 theme === "dark" 
                   ? "bg-slate-800 text-amber-400 shadow-lg" 
                   : "text-slate-500 hover:bg-slate-100"
               )}
-              title="Toggle Dark Mode"
-              data-testid="button-dark-mode"
+              title="Mountain Background"
+              data-testid="button-mountain-icon"
             >
               <Mountain className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={togglePlainLayout}
-              className={cn(
-                "p-2 rounded-full transition-all",
-                plainLayout
-                  ? "bg-indigo-600 text-white shadow-lg"
-                  : theme === "dark" 
-                    ? "text-slate-400 hover:bg-slate-800" 
-                    : "text-slate-500 hover:bg-slate-100"
-              )}
-              title={plainLayout ? "Show Background" : "Plain Layout"}
-              data-testid="button-plain-layout"
-            >
-              <Palette className="w-5 h-5" />
             </button>
             <button 
               onClick={toggleRepelMode}
