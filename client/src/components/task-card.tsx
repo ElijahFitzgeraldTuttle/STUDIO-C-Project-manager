@@ -305,7 +305,7 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
           {/* Tracking Checkboxes */}
           <div 
             className={cn(
-              "grid grid-cols-2 gap-2 mb-3 p-2 rounded-lg border",
+              "grid grid-cols-2 gap-2 mb-3 p-3 rounded-lg border",
               theme === "light" && "bg-slate-50/50 border-slate-100",
               theme === "glassmorphism" && "bg-white/20 border-white/30",
               theme === "dark" && "bg-slate-700/30 border-slate-600/50"
@@ -313,17 +313,23 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
             onClick={(e) => e.stopPropagation()}
           >
             {Object.entries(task.tracking).map(([key, value]) => (
-              <div key={key} className="flex items-center gap-2">
+              <div key={key} className="flex items-center gap-2 hover:bg-white/50 p-1.5 rounded transition-colors">
                 <Checkbox 
                   id={`tracking-${task.id}-${key}`} 
                   checked={value}
                   onCheckedChange={(checked) => handleTrackingChange(key as keyof TaskTracking, checked === true)}
-                  className="h-3 w-3"
+                  className={cn(
+                    "h-5 w-5 rounded-md border-2 transition-all",
+                    theme === "dark" 
+                      ? "border-slate-500 data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500" 
+                      : "border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600",
+                    "hover:border-indigo-400 data-[state=checked]:shadow-md data-[state=checked]:shadow-indigo-500/30"
+                  )}
                 />
                 <Label 
                   htmlFor={`tracking-${task.id}-${key}`}
                   className={cn(
-                    "text-[10px] capitalize cursor-pointer font-medium",
+                    "text-xs capitalize cursor-pointer font-medium",
                     theme === "dark" ? "text-slate-300" : "text-slate-600"
                   )}
                 >
