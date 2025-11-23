@@ -1,11 +1,10 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-type Theme = "light" | "glassmorphism" | "dark";
+type Theme = "light" | "dark";
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  toggleGlassmorphism: () => void;
   toggleDarkMode: () => void;
 }
 
@@ -14,7 +13,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem("theme");
-    return (saved as Theme) || "light";
+    return (saved as Theme) || "dark";
   });
 
   useEffect(() => {
@@ -22,19 +21,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
-  const toggleGlassmorphism = () => {
-    setTheme(current => {
-      if (current === "dark") return "dark";
-      return current === "glassmorphism" ? "light" : "glassmorphism";
-    });
-  };
-
   const toggleDarkMode = () => {
     setTheme(current => current === "dark" ? "light" : "dark");
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleGlassmorphism, toggleDarkMode }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleDarkMode }}>
       {children}
     </ThemeContext.Provider>
   );

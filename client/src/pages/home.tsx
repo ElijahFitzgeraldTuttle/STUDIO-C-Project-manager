@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, HelpCircle, Move } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Mountain, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, HelpCircle } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask, deleteTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
@@ -158,7 +158,7 @@ function DroppableColumn({ id, children, className, style }: { id: string; child
 export default function Home() {
   const queryClient = useQueryClient();
   const { currentUser } = useUser();
-  const { theme, toggleGlassmorphism, toggleDarkMode } = useTheme();
+  const { theme, toggleDarkMode } = useTheme();
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [newTaskStatus, setNewTaskStatus] = useState<Status>("prospect");
   const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -180,19 +180,24 @@ export default function Home() {
   });
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [mousePixelPosition, setMousePixelPosition] = useState({ x: 0, y: 0 });
-  const [repelMode, setRepelMode] = useState(() => {
-    const saved = localStorage.getItem("repelMode");
-    if (saved === null) {
-      // Default to true for first-time visitors
-      localStorage.setItem("repelMode", "true");
-      return true;
+  const [repelMode, setRepelMode] = useState(false);
+
+  // Set repel mode based on user-specific localStorage key
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    const userKey = `repelMode-${currentUser}`;
+    const saved = localStorage.getItem(userKey);
+    
+    if (saved !== null) {
+      setRepelMode(saved === "true");
+    } else {
+      // Only Miles gets repel mode enabled by default
+      const defaultValue = currentUser === "Miles";
+      setRepelMode(defaultValue);
+      localStorage.setItem(userKey, String(defaultValue));
     }
-    return saved === "true";
-  });
-  const [parallaxEnabled, setParallaxEnabled] = useState(() => {
-    const saved = localStorage.getItem("parallaxEnabled");
-    return saved === null ? true : saved === "true";
-  });
+  }, [currentUser]);
 
   const handleBackgroundColorChange = (color: string) => {
     setBackgroundColor(color);
@@ -200,15 +205,11 @@ export default function Home() {
   };
 
   const toggleRepelMode = () => {
+    if (!currentUser) return;
+    
     const newValue = !repelMode;
     setRepelMode(newValue);
-    localStorage.setItem("repelMode", String(newValue));
-  };
-
-  const toggleParallax = () => {
-    const newValue = !parallaxEnabled;
-    setParallaxEnabled(newValue);
-    localStorage.setItem("parallaxEnabled", String(newValue));
+    localStorage.setItem(`repelMode-${currentUser}`, String(newValue));
   };
 
   const sensors = useSensors(
@@ -232,18 +233,18 @@ export default function Home() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Calculate parallax transforms for different layers (only if enabled)
-  const backgroundParallax = parallaxEnabled ? {
+  // Calculate parallax transforms for different layers
+  const backgroundParallax = {
     transform: `translate(${mousePosition.x * 20}px, ${mousePosition.y * 20}px) scale(1.05)`
-  } : {};
+  };
 
-  const columnParallax = parallaxEnabled ? {
+  const columnParallax = {
     transform: `translate(${mousePosition.x * 10}px, ${mousePosition.y * 10}px)`
-  } : {};
+  };
 
-  const cardParallax = parallaxEnabled ? {
+  const cardParallax = {
     transform: `translate(${mousePosition.x * 5}px, ${mousePosition.y * 5}px)`
-  } : {};
+  };
 
   const { data: dbTasks = [], isLoading } = useQuery({
     queryKey: ["tasks", currentDashboardId],
@@ -487,27 +488,10 @@ export default function Home() {
         className={cn(
           "min-h-screen font-sans transition-colors duration-500 relative overflow-hidden",
           theme === "light" && "text-slate-900",
-          theme === "glassmorphism" && "text-white",
           theme === "dark" && "bg-transparent text-slate-100"
         )}
         style={theme === "light" ? { backgroundColor } : undefined}
       >
-        {/* Animated Gradient Background for Glassmorphism */}
-        {theme === "glassmorphism" && (
-          <div className="fixed inset-0 -z-10 overflow-hidden bg-slate-900">
-            <div 
-              className="w-full h-full transition-transform duration-100 ease-out"
-              style={backgroundParallax}
-            >
-              <div className="absolute top-0 -left-40 w-[600px] h-[600px] bg-gradient-to-br from-blue-600 to-purple-700 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob"></div>
-              <div className="absolute top-0 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-purple-600 to-blue-800 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-              <div className="absolute -bottom-40 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-indigo-700 to-purple-800 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
-              <div className="absolute bottom-1/3 -right-20 w-[500px] h-[500px] bg-gradient-to-br from-blue-700 to-indigo-900 rounded-full mix-blend-normal filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-br from-purple-700 to-blue-900 rounded-full mix-blend-normal filter blur-3xl opacity-40 animate-blob"></div>
-            </div>
-          </div>
-        )}
-
         {/* Dark Mode Background */}
         {theme === "dark" && (
           <div key="dark-bg" className="fixed inset-0 -z-10">
@@ -525,7 +509,6 @@ export default function Home() {
         <header className={cn(
           "sticky top-0 z-10 backdrop-blur-md border-b px-6 py-4 transition-all",
           theme === "light" && "bg-white/80 border-slate-200/60",
-          theme === "glassmorphism" && "bg-white/10 border-white/10 shadow-lg",
           theme === "dark" && "bg-slate-900/80 border-slate-700/50"
         )}>
         <div className="max-w-[1800px] mx-auto flex items-center justify-between">
@@ -538,9 +521,7 @@ export default function Home() {
                       "p-2 rounded-lg transition-all",
                       theme === "dark" 
                         ? "hover:bg-slate-800 text-slate-400" 
-                        : theme === "glassmorphism"
-                          ? "hover:bg-white/20 text-white"
-                          : "hover:bg-slate-100 text-slate-600"
+                        : "hover:bg-slate-100 text-slate-600"
                     )}
                     title="Dashboard menu"
                     data-testid="button-header-dashboard-menu"
@@ -614,9 +595,7 @@ export default function Home() {
                   "p-2 rounded-full transition-all",
                   theme === "dark" 
                     ? "text-slate-400 hover:bg-slate-800" 
-                    : theme === "glassmorphism"
-                      ? "text-white hover:bg-white/20"
-                      : "text-slate-500 hover:bg-slate-100"
+                    : "text-slate-500 hover:bg-slate-100"
                 )}
                 title="Pending Payouts"
                 data-testid="button-pending-payouts"
@@ -625,34 +604,17 @@ export default function Home() {
               </button>
             </Link>
             <button 
-              onClick={toggleGlassmorphism}
-              className={cn(
-                "p-2 rounded-full transition-all",
-                theme === "glassmorphism" 
-                  ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg" 
-                  : theme === "dark"
-                    ? "text-slate-400 hover:bg-slate-800"
-                    : "text-slate-500 hover:bg-slate-100"
-              )}
-              title="Toggle Glassmorphism"
-              data-testid="button-glassmorphism"
-            >
-              <Sparkles className="w-5 h-5" />
-            </button>
-            <button 
               onClick={toggleDarkMode}
               className={cn(
                 "p-2 rounded-full transition-all",
                 theme === "dark" 
                   ? "bg-slate-800 text-amber-400 shadow-lg" 
-                  : theme === "glassmorphism"
-                    ? "text-white hover:bg-white/20"
-                    : "text-slate-500 hover:bg-slate-100"
+                  : "text-slate-500 hover:bg-slate-100"
               )}
               title="Toggle Dark Mode"
               data-testid="button-dark-mode"
             >
-              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              <Mountain className="w-5 h-5" />
             </button>
             {theme === "light" && (
               <div className="relative group">
@@ -677,23 +639,6 @@ export default function Home() {
               </div>
             )}
             <button 
-              onClick={toggleParallax}
-              className={cn(
-                "p-2 rounded-full transition-all",
-                parallaxEnabled
-                  ? "bg-blue-600 text-white shadow-lg"
-                  : theme === "dark" 
-                    ? "text-slate-400 hover:bg-slate-800" 
-                    : theme === "glassmorphism"
-                      ? "text-white hover:bg-white/20"
-                      : "text-slate-500 hover:bg-slate-100"
-              )}
-              title={parallaxEnabled ? "Disable Parallax" : "Enable Parallax"}
-              data-testid="button-parallax"
-            >
-              <Move className="w-5 h-5" />
-            </button>
-            <button 
               onClick={toggleRepelMode}
               className={cn(
                 "p-2 rounded-full transition-all",
@@ -701,9 +646,7 @@ export default function Home() {
                   ? "bg-purple-600 text-white shadow-lg"
                   : theme === "dark" 
                     ? "text-slate-400 hover:bg-slate-800" 
-                    : theme === "glassmorphism"
-                      ? "text-white hover:bg-white/20"
-                      : "text-slate-500 hover:bg-slate-100"
+                    : "text-slate-500 hover:bg-slate-100"
               )}
               title={repelMode ? "Disable Repel Mode" : "Enable Repel Mode"}
               data-testid="button-repel-mode"
@@ -716,9 +659,7 @@ export default function Home() {
                 "p-2 rounded-full transition-all",
                 theme === "dark" 
                   ? "text-slate-400 hover:bg-slate-800" 
-                  : theme === "glassmorphism"
-                    ? "text-white hover:bg-white/20"
-                    : "text-slate-500 hover:bg-slate-100"
+                  : "text-slate-500 hover:bg-slate-100"
               )}
               title="Manage Columns"
               data-testid="button-column-settings"
@@ -734,7 +675,6 @@ export default function Home() {
       <div className={cn(
         "border-b px-6 py-2",
         theme === "light" && "border-slate-200/60 bg-white/50",
-        theme === "glassmorphism" && "border-white/20 bg-white/10 backdrop-blur-md",
         theme === "dark" && "border-slate-700/50 bg-slate-900/50"
       )}>
         <div className="max-w-[1800px] mx-auto flex items-center gap-2">
@@ -765,14 +705,10 @@ export default function Home() {
                   currentDashboardId === dashboard.id
                     ? theme === "dark"
                       ? "bg-slate-800 text-white"
-                      : theme === "glassmorphism"
-                        ? "bg-white/20 text-white shadow-sm backdrop-blur-md"
-                        : "bg-white text-slate-900 shadow-sm"
+                      : "bg-white text-slate-900 shadow-sm"
                     : theme === "dark"
                       ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                      : theme === "glassmorphism"
-                        ? "text-white/70 hover:text-white hover:bg-white/10"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
                 )}
                 onClick={() => setCurrentDashboardId(dashboard.id)}
                 data-testid={`tab-dashboard-${dashboard.id}`}
@@ -903,7 +839,6 @@ export default function Home() {
                 <div className={cn(
                   "flex items-center justify-between mb-4 p-3 rounded-xl border",
                   theme === "light" && "bg-white border-slate-100 shadow-md",
-                  theme === "glassmorphism" && "bg-white/60 backdrop-blur-md border-white/40 shadow-lg shadow-blue-500/20",
                   theme === "dark" && "bg-slate-800/80 border-slate-700/70 shadow-lg shadow-black/40"
                 )}>
                   <div className="flex items-center gap-2">
@@ -930,8 +865,6 @@ export default function Home() {
                     "flex-1 rounded-xl p-3 border flex flex-col gap-3 min-h-[500px] transition-all",
                     // Light theme
                     theme === "light" && "bg-slate-100/50 border-slate-200/60 shadow-lg shadow-slate-200/60",
-                    // Glassmorphism theme
-                    theme === "glassmorphism" && "bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl shadow-blue-500/30",
                     // Dark theme
                     theme === "dark" && "bg-slate-800/30 backdrop-blur-md border-slate-700/50 shadow-2xl shadow-black/50"
                   )}

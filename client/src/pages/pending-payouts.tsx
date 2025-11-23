@@ -17,22 +17,8 @@ export default function PendingPayouts() {
       <div className={cn(
         "min-h-screen flex items-center justify-center font-sans transition-colors duration-500 relative overflow-hidden",
         theme === "light" && "bg-slate-50/50 text-slate-900",
-        theme === "glassmorphism" && "text-slate-900",
         theme === "dark" && "bg-transparent text-slate-100"
       )}>
-        {/* Animated Gradient Background for Glassmorphism */}
-        {theme === "glassmorphism" && (
-          <div className="fixed inset-0 -z-10 overflow-hidden bg-slate-900">
-            <div className="w-full h-full">
-              <div className="absolute top-0 -left-40 w-[600px] h-[600px] bg-gradient-to-br from-blue-600 to-purple-700 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob"></div>
-              <div className="absolute top-0 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-purple-600 to-blue-800 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-              <div className="absolute -bottom-40 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-indigo-700 to-purple-800 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
-              <div className="absolute bottom-1/3 -right-20 w-[500px] h-[500px] bg-gradient-to-br from-blue-700 to-indigo-900 rounded-full mix-blend-normal filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-br from-purple-700 to-blue-900 rounded-full mix-blend-normal filter blur-3xl opacity-40 animate-blob"></div>
-            </div>
-          </div>
-        )}
-
         {/* Dark Mode Background */}
         {theme === "dark" && (
           <div key="dark-bg" className="fixed inset-0 -z-10">
@@ -54,22 +40,8 @@ export default function PendingPayouts() {
     <div className={cn(
       "min-h-screen p-8 font-sans transition-colors duration-500 relative overflow-hidden",
       theme === "light" && "bg-slate-50/50 text-slate-900",
-      theme === "glassmorphism" && "text-slate-900",
       theme === "dark" && "bg-transparent text-slate-100"
     )}>
-      {/* Animated Gradient Background for Glassmorphism */}
-      {theme === "glassmorphism" && (
-        <div className="fixed inset-0 -z-10 overflow-hidden bg-slate-900">
-          <div className="w-full h-full">
-            <div className="absolute top-0 -left-40 w-[600px] h-[600px] bg-gradient-to-br from-blue-600 to-purple-700 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob"></div>
-            <div className="absolute top-0 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-purple-600 to-blue-800 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-40 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-indigo-700 to-purple-800 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
-            <div className="absolute bottom-1/3 -right-20 w-[500px] h-[500px] bg-gradient-to-br from-blue-700 to-indigo-900 rounded-full mix-blend-normal filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-br from-purple-700 to-blue-900 rounded-full mix-blend-normal filter blur-3xl opacity-40 animate-blob"></div>
-          </div>
-        </div>
-      )}
-
       {/* Dark Mode Background */}
       {theme === "dark" && (
         <div key="dark-bg" className="fixed inset-0 -z-10">
@@ -87,7 +59,6 @@ export default function PendingPayouts() {
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
                 theme === "light" && "hover:bg-slate-100 text-slate-700",
-                theme === "glassmorphism" && "bg-white/70 backdrop-blur-sm hover:bg-white/90 border border-white/30",
                 theme === "dark" && "bg-slate-800/70 hover:bg-slate-800/90 text-slate-300"
               )}
               data-testid="button-back"
@@ -104,7 +75,6 @@ export default function PendingPayouts() {
             <div className={cn(
               "mb-6 p-6 rounded-lg border",
               theme === "light" && "bg-blue-50 border-blue-200",
-              theme === "glassmorphism" && "bg-white/80 backdrop-blur-md border-white/30 shadow-lg",
               theme === "dark" && "bg-blue-900/70 border-blue-800/50"
             )}>
               <div className="flex items-center gap-3">
@@ -116,7 +86,6 @@ export default function PendingPayouts() {
                   <div className={cn(
                     "text-sm",
                     theme === "light" && "text-gray-600",
-                    theme === "glassmorphism" && "text-slate-700",
                     theme === "dark" && "text-gray-400"
                   )}>Total Unpaid Across All Payees</div>
                   <div className={cn(
@@ -136,7 +105,6 @@ export default function PendingPayouts() {
                   className={cn(
                     "rounded-lg border overflow-hidden",
                     theme === "light" && "bg-white border-slate-200",
-                    theme === "glassmorphism" && "bg-white/80 backdrop-blur-md border-white/30 shadow-lg",
                     theme === "dark" && "bg-slate-800/90 border-slate-700/50"
                   )}
                   data-testid={`card-payee-${payeeGroup.name}`}
@@ -144,7 +112,6 @@ export default function PendingPayouts() {
                   <div className={cn(
                     "px-6 py-4 border-b",
                     theme === "light" && "bg-slate-50 border-slate-200",
-                    theme === "glassmorphism" && "bg-white/60 border-white/20",
                     theme === "dark" && "bg-slate-900/80 border-slate-700/50"
                   )}>
                     <div className="flex items-center justify-between">
@@ -163,7 +130,6 @@ export default function PendingPayouts() {
                   <div className={cn(
                     "divide-y",
                     theme === "light" && "divide-slate-200",
-                    theme === "glassmorphism" && "divide-white/20",
                     theme === "dark" && "divide-slate-700/50"
                   )}>
                     {payeeGroup.tasks.map((task) => (
@@ -172,7 +138,6 @@ export default function PendingPayouts() {
                         className={cn(
                           "px-6 py-4 transition-colors",
                           theme === "light" && "hover:bg-slate-50",
-                          theme === "glassmorphism" && "hover:bg-white/50",
                           theme === "dark" && "hover:bg-slate-900/50"
                         )}
                         data-testid={`row-task-${task.taskId}`}
@@ -185,7 +150,6 @@ export default function PendingPayouts() {
                             <div className={cn(
                               "text-sm",
                               theme === "light" && "text-gray-600",
-                              theme === "glassmorphism" && "text-slate-700",
                               theme === "dark" && "text-gray-400"
                             )} data-testid={`text-task-reason-${task.taskId}`}>
                               {task.reason}
@@ -207,7 +171,6 @@ export default function PendingPayouts() {
             <div className={cn(
               "text-lg",
               theme === "light" && "text-gray-500",
-              theme === "glassmorphism" && "text-slate-600",
               theme === "dark" && "text-gray-400"
             )} data-testid="text-no-pending">
               No pending payouts
