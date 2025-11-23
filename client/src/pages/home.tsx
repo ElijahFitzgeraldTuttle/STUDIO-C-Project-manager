@@ -600,7 +600,7 @@ export default function Home() {
               <div
                 key={dashboard.id}
                 className={cn(
-                  "px-4 py-2 rounded-t-lg text-sm font-medium transition-all group relative flex items-center gap-1 cursor-pointer",
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-all group relative flex items-center gap-1 cursor-pointer",
                   currentDashboardId === dashboard.id
                     ? theme === "dark"
                       ? "bg-slate-800 text-white"
