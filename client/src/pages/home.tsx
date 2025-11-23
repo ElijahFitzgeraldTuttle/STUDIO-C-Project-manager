@@ -212,10 +212,11 @@ export default function Home() {
 
   const deleteDashboardMutation = useMutation({
     mutationFn: deleteDashboard,
-    onSuccess: () => {
+    onSuccess: (_, deletedId) => {
       queryClient.invalidateQueries({ queryKey: ["dashboards"] });
-      if (dashboards.length > 0) {
-        setCurrentDashboardId(dashboards[0].id);
+      const remainingDashboards = dashboards.filter(d => d.id !== deletedId);
+      if (remainingDashboards.length > 0) {
+        setCurrentDashboardId(remainingDashboards[0].id);
       } else {
         setCurrentDashboardId(null);
       }
@@ -517,7 +518,7 @@ export default function Home() {
                 data-testid={`tab-dashboard-${dashboard.id}`}
               >
                 <span className="flex-1">{dashboard.name}</span>
-                {currentDashboardId === dashboard.id && dashboards.length > 1 && (
+                {currentDashboardId === dashboard.id && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <button
