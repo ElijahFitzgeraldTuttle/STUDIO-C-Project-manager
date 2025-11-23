@@ -256,7 +256,7 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                 </div>
               )}
               <h3 className={cn(
-                "text-sm font-semibold leading-tight pt-1 flex-1 min-w-0",
+                "text-lg font-semibold leading-tight pt-1 flex-1 min-w-0",
                 theme === "dark" ? "text-slate-100" : "text-slate-800"
               )}>
                 {task.title}
@@ -329,7 +329,7 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                 <Label 
                   htmlFor={`tracking-${task.id}-${key}`}
                   className={cn(
-                    "text-xs capitalize cursor-pointer font-medium",
+                    "text-xs capitalize cursor-pointer font-semibold",
                     theme === "dark" ? "text-slate-300" : "text-slate-600"
                   )}
                 >
