@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
@@ -514,41 +514,68 @@ export default function Home() {
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
                 )}
                 onClick={() => setCurrentDashboardId(dashboard.id)}
-                onDoubleClick={() => startEditingDashboard(dashboard.id, dashboard.name)}
                 data-testid={`tab-dashboard-${dashboard.id}`}
               >
                 <span className="flex-1">{dashboard.name}</span>
                 {currentDashboardId === dashboard.id && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <button
                         onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center justify-center w-4 h-4 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-opacity"
-                        data-testid={`button-delete-dashboard-${dashboard.id}`}
-                        title="Delete dashboard"
+                        className={cn(
+                          "inline-flex items-center justify-center w-6 h-6 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors",
+                          theme === "dark" ? "text-slate-400" : "text-slate-500"
+                        )}
+                        data-testid={`button-dashboard-menu-${dashboard.id}`}
+                        title="Dashboard menu"
                       >
-                        <X className="w-3 h-3" />
+                        <MoreVertical className="w-4 h-4" />
                       </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Dashboard?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{dashboard.name}"? All tasks and columns in this dashboard will be permanently deleted. This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel data-testid="button-cancel-delete-dashboard">Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteDashboardMutation.mutate(dashboard.id)}
-                          className="bg-red-600 hover:bg-red-700"
-                          data-testid="button-confirm-delete-dashboard"
-                        >
-                          Delete Dashboard
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startEditingDashboard(dashboard.id, dashboard.name);
+                        }}
+                        data-testid={`menu-rename-dashboard-${dashboard.id}`}
+                      >
+                        <Edit2 className="w-4 h-4 mr-2" />
+                        Rename Dashboard
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <DropdownMenuItem
+                            onSelect={(e) => e.preventDefault()}
+                            className="text-red-600 focus:text-red-600"
+                            data-testid={`menu-delete-dashboard-${dashboard.id}`}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Dashboard
+                          </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Dashboard?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{dashboard.name}"? All tasks and columns in this dashboard will be permanently deleted. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel data-testid="button-cancel-delete-dashboard">Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteDashboardMutation.mutate(dashboard.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                              data-testid="button-confirm-delete-dashboard"
+                            >
+                              Delete Dashboard
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
               </div>
             )
