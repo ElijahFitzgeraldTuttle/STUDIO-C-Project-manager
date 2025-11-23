@@ -3,7 +3,7 @@ import { TaskCard } from "@/components/task-card";
 import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { fetchTasks, updateTask, getUnreadCounts, createTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
+import { fetchTasks, updateTask, getUnreadCounts, createTask, deleteTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
 import { dbTaskToTask, taskToDbTask, type Task, type Status, statusConfig } from "@/lib/types";
 import { useUser } from "@/contexts/UserContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -70,7 +70,7 @@ function UserAvatar() {
   );
 }
 
-function DraggableTask({ task, unreadCount, onUpdate }: { task: Task; unreadCount: number; onUpdate: (task: Task) => void }) {
+function DraggableTask({ task, unreadCount, onUpdate, onDelete }: { task: Task; unreadCount: number; onUpdate: (task: Task) => void; onDelete: (taskId: number) => void }) {
   const {
     attributes,
     listeners,
@@ -91,6 +91,7 @@ function DraggableTask({ task, unreadCount, onUpdate }: { task: Task; unreadCoun
       <TaskCard 
         task={task} 
         onUpdate={onUpdate}
+        onDelete={onDelete}
         unreadCount={unreadCount}
         dragHandleProps={listeners}
       />
@@ -160,6 +161,13 @@ export default function Home() {
   const updateTaskMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<Task> }) =>
       updateTask(id, taskToDbTask(data)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: deleteTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
@@ -747,6 +755,7 @@ export default function Home() {
                           key={task.id} 
                           task={task} 
                           onUpdate={handleUpdateTask}
+                          onDelete={(taskId) => deleteTaskMutation.mutate(taskId)}
                           unreadCount={unreadCounts[task.id] || 0}
                         />
                       ))}

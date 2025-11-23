@@ -9,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
@@ -31,11 +32,12 @@ import { useTheme } from "@/contexts/ThemeContext";
 interface TaskCardProps {
   task: Task;
   onUpdate: (task: Task) => void;
+  onDelete: (taskId: number) => void;
   unreadCount?: number;
   dragHandleProps?: any;
 }
 
-export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: TaskCardProps) {
+export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandleProps }: TaskCardProps) {
   const [newComment, setNewComment] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
@@ -277,6 +279,15 @@ export function TaskCard({ task, onUpdate, unreadCount = 0, dragHandleProps }: T
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onUpdate({ ...task, status: "complete" })}>
                     Move to Complete
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => onDelete(task.id)}
+                    className="text-red-600 focus:text-red-600"
+                    data-testid={`menu-delete-task-${task.id}`}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Task
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
