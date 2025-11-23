@@ -624,25 +624,13 @@ export default function Home() {
                   : plainLayout && theme === "light"
                     ? "bg-amber-400 text-slate-900 shadow-lg"
                     : theme === "dark" 
-                      ? "text-slate-400 hover:bg-slate-800" 
+                      ? "bg-slate-800 text-amber-400 shadow-lg"
                       : "text-slate-500 hover:bg-slate-100"
               )}
-              title={!plainLayout ? "Switch to Plain Layout" : theme === "light" ? "Switch to Dark" : "Switch to Mountain Background"}
+              title={!plainLayout ? "Mountain Background" : theme === "light" ? "Light Mode" : "Dark Mode"}
               data-testid="button-layout-mode"
             >
-              {!plainLayout ? <Sun className="w-5 h-5" /> : theme === "light" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-            <button 
-              className={cn(
-                "p-2 rounded-full transition-all",
-                theme === "dark" 
-                  ? "bg-slate-800 text-amber-400 shadow-lg" 
-                  : "text-slate-500 hover:bg-slate-100"
-              )}
-              title="Mountain Background"
-              data-testid="button-mountain-icon"
-            >
-              <Mountain className="w-5 h-5" />
+              {!plainLayout ? <Mountain className="w-5 h-5" /> : theme === "light" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
             <button 
               onClick={toggleRepelMode}
