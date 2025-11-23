@@ -495,14 +495,6 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3 ml-auto">
-            <div className="hidden md:flex items-center px-3 py-1.5 bg-slate-100/50 border border-slate-200/60 rounded-full text-sm text-slate-500 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500/50 transition-all">
-              <Search className="w-4 h-4 mr-2" />
-              <input 
-                type="text" 
-                placeholder="Search tasks..." 
-                className="bg-transparent border-none outline-none placeholder:text-slate-400 w-48"
-              />
-            </div>
             <Link href="/pending-payouts">
               <button 
                 className={cn(
