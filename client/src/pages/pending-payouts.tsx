@@ -4,9 +4,13 @@ import { ArrowLeft, DollarSign } from "lucide-react";
 import { Link } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 export default function PendingPayouts() {
   const { theme } = useTheme();
+  const [plainLayout] = useState(() => {
+    return localStorage.getItem("plainLayout") === "true";
+  });
   const { data: unpaidPayouts, isLoading } = useQuery({
     queryKey: ["unpaid-payouts"],
     queryFn: fetchUnpaidPayouts,
@@ -16,17 +20,28 @@ export default function PendingPayouts() {
     return (
       <div className={cn(
         "min-h-screen flex items-center justify-center font-sans transition-colors duration-500 relative overflow-hidden",
-        theme === "light" && "bg-slate-50/50 text-slate-900",
-        theme === "dark" && "bg-transparent text-slate-100"
+        theme === "light" && !plainLayout && "bg-slate-50 text-slate-900",
+        theme === "light" && plainLayout && "bg-white text-slate-900",
+        theme === "dark" && plainLayout && "bg-slate-950 text-slate-100",
+        theme === "dark" && !plainLayout && "bg-transparent text-slate-100"
       )}>
-        {/* Dark Mode Background */}
-        {theme === "dark" && (
+        {/* Background Image (only when not in plain layout) */}
+        {!plainLayout && theme === "dark" && (
           <div key="dark-bg" className="fixed inset-0 -z-10">
             <div 
               className="w-full h-full bg-cover bg-center"
               style={{ backgroundImage: 'url(/dark-bg-default.png)' }}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 via-slate-900/20 to-slate-900/30"></div>
+          </div>
+        )}
+        {!plainLayout && theme === "light" && (
+          <div key="light-bg" className="fixed inset-0 -z-10">
+            <div 
+              className="w-full h-full bg-cover bg-center"
+              style={{ backgroundImage: 'url(/dark-bg-default.png)' }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/80 to-white/90"></div>
           </div>
         )}
         <div className="text-lg">Loading pending payouts...</div>
@@ -39,17 +54,28 @@ export default function PendingPayouts() {
   return (
     <div className={cn(
       "min-h-screen p-8 font-sans transition-colors duration-500 relative overflow-hidden",
-      theme === "light" && "bg-slate-50/50 text-slate-900",
-      theme === "dark" && "bg-transparent text-slate-100"
+      theme === "light" && !plainLayout && "bg-slate-50 text-slate-900",
+      theme === "light" && plainLayout && "bg-white text-slate-900",
+      theme === "dark" && plainLayout && "bg-slate-950 text-slate-100",
+      theme === "dark" && !plainLayout && "bg-transparent text-slate-100"
     )}>
-      {/* Dark Mode Background */}
-      {theme === "dark" && (
+      {/* Background Image (only when not in plain layout) */}
+      {!plainLayout && theme === "dark" && (
         <div key="dark-bg" className="fixed inset-0 -z-10">
           <div 
             className="w-full h-full bg-cover bg-center"
             style={{ backgroundImage: 'url(/dark-bg-default.png)' }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 via-slate-900/20 to-slate-900/30"></div>
+        </div>
+      )}
+      {!plainLayout && theme === "light" && (
+        <div key="light-bg" className="fixed inset-0 -z-10">
+          <div 
+            className="w-full h-full bg-cover bg-center"
+            style={{ backgroundImage: 'url(/dark-bg-default.png)' }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/80 to-white/90"></div>
         </div>
       )}
       <div className="max-w-6xl mx-auto">

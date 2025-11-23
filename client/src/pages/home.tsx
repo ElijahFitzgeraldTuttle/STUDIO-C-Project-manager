@@ -70,7 +70,7 @@ function UserAvatar() {
   );
 }
 
-function DraggableTask({ task, unreadCount, onUpdate, onDelete, cardParallax, repelMode, mousePixelPosition }: { task: Task; unreadCount: number; onUpdate: (task: Task) => void; onDelete: (taskId: number) => void; cardParallax?: React.CSSProperties; repelMode?: boolean; mousePixelPosition?: { x: number; y: number } }) {
+function DraggableTask({ task, unreadCount, onUpdate, onDelete, repelMode, mousePixelPosition }: { task: Task; unreadCount: number; onUpdate: (task: Task) => void; onDelete: (taskId: number) => void; repelMode?: boolean; mousePixelPosition?: { x: number; y: number } }) {
   const {
     attributes,
     listeners,
@@ -113,7 +113,7 @@ function DraggableTask({ task, unreadCount, onUpdate, onDelete, cardParallax, re
 
   const dragTransform = CSS.Transform.toString(transform);
   
-  let finalTransform = dragTransform || (cardParallax?.transform as string) || undefined;
+  let finalTransform = dragTransform || undefined;
   
   if (repelMode && !isDragging) {
     finalTransform = `translate(${repelTransform.x}px, ${repelTransform.y}px)`;
@@ -175,12 +175,11 @@ export default function Home() {
   const [editingColumnColor, setEditingColumnColor] = useState("");
   const [newColumnName, setNewColumnName] = useState("");
   const [newColumnColor, setNewColumnColor] = useState("#f1f5f9");
-  const [backgroundColor, setBackgroundColor] = useState(() => {
-    return localStorage.getItem("appBackgroundColor") || "#f8fafc";
-  });
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [mousePixelPosition, setMousePixelPosition] = useState({ x: 0, y: 0 });
   const [repelMode, setRepelMode] = useState(false);
+  const [plainLayout, setPlainLayout] = useState(() => {
+    return localStorage.getItem("plainLayout") === "true";
+  });
 
   // Set repel mode based on user-specific localStorage key
   useEffect(() => {
@@ -199,9 +198,10 @@ export default function Home() {
     }
   }, [currentUser]);
 
-  const handleBackgroundColorChange = (color: string) => {
-    setBackgroundColor(color);
-    localStorage.setItem("appBackgroundColor", color);
+  const togglePlainLayout = () => {
+    const newValue = !plainLayout;
+    setPlainLayout(newValue);
+    localStorage.setItem("plainLayout", String(newValue));
   };
 
   const toggleRepelMode = () => {
@@ -220,31 +220,15 @@ export default function Home() {
     })
   );
 
-  // Parallax and repel mouse tracking
+  // Mouse tracking for repel mode
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 2;
-      const y = (e.clientY / window.innerHeight - 0.5) * 2;
-      setMousePosition({ x, y });
       setMousePixelPosition({ x: e.clientX, y: e.clientY });
     };
 
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
-
-  // Calculate parallax transforms for different layers
-  const backgroundParallax = {
-    transform: `translate(${mousePosition.x * 20}px, ${mousePosition.y * 20}px) scale(1.05)`
-  };
-
-  const columnParallax = {
-    transform: `translate(${mousePosition.x * 10}px, ${mousePosition.y * 10}px)`
-  };
-
-  const cardParallax = {
-    transform: `translate(${mousePosition.x * 5}px, ${mousePosition.y * 5}px)`
-  };
 
   const { data: dbTasks = [], isLoading } = useQuery({
     queryKey: ["tasks", currentDashboardId],
@@ -487,22 +471,33 @@ export default function Home() {
       <div 
         className={cn(
           "min-h-screen font-sans transition-colors duration-500 relative overflow-hidden",
-          theme === "light" && "text-slate-900",
-          theme === "dark" && "bg-transparent text-slate-100"
+          theme === "light" && !plainLayout && "bg-slate-50 text-slate-900",
+          theme === "light" && plainLayout && "bg-white text-slate-900",
+          theme === "dark" && plainLayout && "bg-slate-950 text-slate-100",
+          theme === "dark" && !plainLayout && "bg-transparent text-slate-100"
         )}
-        style={theme === "light" ? { backgroundColor } : undefined}
       >
-        {/* Dark Mode Background */}
-        {theme === "dark" && (
+        {/* Background Image (only when not in plain layout) */}
+        {!plainLayout && theme === "dark" && (
           <div key="dark-bg" className="fixed inset-0 -z-10">
             <div 
-              className="w-full h-full bg-cover bg-center transition-all duration-100 ease-out"
+              className="w-full h-full bg-cover bg-center"
               style={{ 
-                backgroundImage: 'url(/dark-bg-default.png)',
-                ...backgroundParallax
+                backgroundImage: 'url(/dark-bg-default.png)'
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 via-slate-900/20 to-slate-900/30"></div>
+          </div>
+        )}
+        {!plainLayout && theme === "light" && (
+          <div key="light-bg" className="fixed inset-0 -z-10">
+            <div 
+              className="w-full h-full bg-cover bg-center"
+              style={{ 
+                backgroundImage: 'url(/dark-bg-default.png)'
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/80 to-white/90"></div>
           </div>
         )}
         {/* Header */}
@@ -616,28 +611,21 @@ export default function Home() {
             >
               <Mountain className="w-5 h-5" />
             </button>
-            {theme === "light" && (
-              <div className="relative group">
-                <label 
-                  htmlFor="bg-color-picker"
-                  className={cn(
-                    "p-2 rounded-full transition-all cursor-pointer inline-flex",
-                    "text-slate-500 hover:bg-slate-100"
-                  )}
-                  title="Change Background Color"
-                >
-                  <Palette className="w-5 h-5" />
-                </label>
-                <input 
-                  id="bg-color-picker"
-                  type="color"
-                  value={backgroundColor}
-                  onChange={(e) => handleBackgroundColorChange(e.target.value)}
-                  className="absolute opacity-0 w-0 h-0"
-                  data-testid="input-background-color"
-                />
-              </div>
-            )}
+            <button 
+              onClick={togglePlainLayout}
+              className={cn(
+                "p-2 rounded-full transition-all",
+                plainLayout
+                  ? "bg-indigo-600 text-white shadow-lg"
+                  : theme === "dark" 
+                    ? "text-slate-400 hover:bg-slate-800" 
+                    : "text-slate-500 hover:bg-slate-100"
+              )}
+              title={plainLayout ? "Show Background" : "Plain Layout"}
+              data-testid="button-plain-layout"
+            >
+              <Palette className="w-5 h-5" />
+            </button>
             <button 
               onClick={toggleRepelMode}
               className={cn(
@@ -832,8 +820,7 @@ export default function Home() {
             return (
               <div 
                 key={column.id} 
-                className="flex-1 min-w-[300px] flex flex-col h-full transition-transform duration-100 ease-out"
-                style={columnParallax}
+                className="flex-1 min-w-[300px] flex flex-col h-full"
               >
                 {/* Column Header */}
                 <div className={cn(
@@ -880,7 +867,6 @@ export default function Home() {
                           onUpdate={handleUpdateTask}
                           onDelete={(taskId) => deleteTaskMutation.mutate(taskId)}
                           unreadCount={unreadCounts[task.id] || 0}
-                          cardParallax={cardParallax}
                           repelMode={repelMode}
                           mousePixelPosition={mousePixelPosition}
                         />
