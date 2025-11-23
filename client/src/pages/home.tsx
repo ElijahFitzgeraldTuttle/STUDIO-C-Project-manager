@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, HelpCircle } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask, deleteTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
@@ -70,7 +70,7 @@ function UserAvatar() {
   );
 }
 
-function DraggableTask({ task, unreadCount, onUpdate, onDelete, cardParallax }: { task: Task; unreadCount: number; onUpdate: (task: Task) => void; onDelete: (taskId: number) => void; cardParallax?: React.CSSProperties }) {
+function DraggableTask({ task, unreadCount, onUpdate, onDelete, cardParallax, repelMode, mousePixelPosition }: { task: Task; unreadCount: number; onUpdate: (task: Task) => void; onDelete: (taskId: number) => void; cardParallax?: React.CSSProperties; repelMode?: boolean; mousePixelPosition?: { x: number; y: number } }) {
   const {
     attributes,
     listeners,
@@ -80,16 +80,54 @@ function DraggableTask({ task, unreadCount, onUpdate, onDelete, cardParallax }: 
     isDragging,
   } = useSortable({ id: task.id.toString() });
 
+  const [cardElement, setCardElement] = useState<HTMLDivElement | null>(null);
+  const [repelTransform, setRepelTransform] = useState({ x: 0, y: 0 });
+
+  // Calculate repel effect
+  useEffect(() => {
+    if (!repelMode || !mousePixelPosition || !cardElement) {
+      setRepelTransform({ x: 0, y: 0 });
+      return;
+    }
+
+    const rect = cardElement.getBoundingClientRect();
+    const cardCenterX = rect.left + rect.width / 2;
+    const cardCenterY = rect.top + rect.height / 2;
+
+    const deltaX = cardCenterX - mousePixelPosition.x;
+    const deltaY = cardCenterY - mousePixelPosition.y;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    const repelRadius = 300; // Distance at which repel effect starts
+    if (distance < repelRadius) {
+      const repelStrength = (1 - distance / repelRadius) * 150; // Max 150px repel
+      const angle = Math.atan2(deltaY, deltaX);
+      setRepelTransform({
+        x: Math.cos(angle) * repelStrength,
+        y: Math.sin(angle) * repelStrength,
+      });
+    } else {
+      setRepelTransform({ x: 0, y: 0 });
+    }
+  }, [repelMode, mousePixelPosition, cardElement]);
+
   const dragTransform = CSS.Transform.toString(transform);
   
+  let finalTransform = dragTransform || (cardParallax?.transform as string) || undefined;
+  
+  if (repelMode && !isDragging) {
+    finalTransform = `translate(${repelTransform.x}px, ${repelTransform.y}px)`;
+  }
+  
   const style: React.CSSProperties = {
-    transform: dragTransform || (cardParallax?.transform as string) || undefined,
-    transition: isDragging ? transition : 'transform 0.1s ease-out',
+    transform: finalTransform,
+    transition: isDragging ? transition : repelMode ? 'transform 0.05s ease-out' : 'transform 0.1s ease-out',
     opacity: isDragging ? 0.5 : 1,
+    pointerEvents: repelMode ? 'none' : 'auto',
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes}>
+    <div ref={(node) => { setNodeRef(node); setCardElement(node); }} style={style} {...attributes}>
       <TaskCard 
         task={task} 
         onUpdate={onUpdate}
@@ -141,6 +179,8 @@ export default function Home() {
     return localStorage.getItem("appBackgroundColor") || "#f8fafc";
   });
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mousePixelPosition, setMousePixelPosition] = useState({ x: 0, y: 0 });
+  const [repelMode, setRepelMode] = useState(false);
 
   const handleBackgroundColorChange = (color: string) => {
     setBackgroundColor(color);
@@ -155,12 +195,13 @@ export default function Home() {
     })
   );
 
-  // Parallax mouse tracking
+  // Parallax and repel mouse tracking
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const x = (e.clientX / window.innerWidth - 0.5) * 2;
       const y = (e.clientY / window.innerHeight - 0.5) * 2;
       setMousePosition({ x, y });
+      setMousePixelPosition({ x: e.clientX, y: e.clientY });
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -612,6 +653,23 @@ export default function Home() {
               </div>
             )}
             <button 
+              onClick={() => setRepelMode(!repelMode)}
+              className={cn(
+                "p-2 rounded-full transition-all",
+                repelMode
+                  ? "bg-purple-600 text-white shadow-lg"
+                  : theme === "dark" 
+                    ? "text-slate-400 hover:bg-slate-800" 
+                    : theme === "glassmorphism"
+                      ? "text-white hover:bg-white/20"
+                      : "text-slate-500 hover:bg-slate-100"
+              )}
+              title={repelMode ? "Disable Repel Mode" : "Enable Repel Mode"}
+              data-testid="button-repel-mode"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
+            <button 
               onClick={() => setIsColumnSettingsOpen(true)}
               className={cn(
                 "p-2 rounded-full transition-all",
@@ -849,6 +907,8 @@ export default function Home() {
                           onDelete={(taskId) => deleteTaskMutation.mutate(taskId)}
                           unreadCount={unreadCounts[task.id] || 0}
                           cardParallax={cardParallax}
+                          repelMode={repelMode}
+                          mousePixelPosition={mousePixelPosition}
                         />
                       ))}
                     </AnimatePresence>
