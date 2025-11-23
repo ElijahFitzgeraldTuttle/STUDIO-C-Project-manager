@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, HelpCircle } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, HelpCircle, Move } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask, deleteTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
@@ -180,11 +180,35 @@ export default function Home() {
   });
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [mousePixelPosition, setMousePixelPosition] = useState({ x: 0, y: 0 });
-  const [repelMode, setRepelMode] = useState(false);
+  const [repelMode, setRepelMode] = useState(() => {
+    const saved = localStorage.getItem("repelMode");
+    if (saved === null) {
+      // Default to true for first-time visitors
+      localStorage.setItem("repelMode", "true");
+      return true;
+    }
+    return saved === "true";
+  });
+  const [parallaxEnabled, setParallaxEnabled] = useState(() => {
+    const saved = localStorage.getItem("parallaxEnabled");
+    return saved === null ? true : saved === "true";
+  });
 
   const handleBackgroundColorChange = (color: string) => {
     setBackgroundColor(color);
     localStorage.setItem("appBackgroundColor", color);
+  };
+
+  const toggleRepelMode = () => {
+    const newValue = !repelMode;
+    setRepelMode(newValue);
+    localStorage.setItem("repelMode", String(newValue));
+  };
+
+  const toggleParallax = () => {
+    const newValue = !parallaxEnabled;
+    setParallaxEnabled(newValue);
+    localStorage.setItem("parallaxEnabled", String(newValue));
   };
 
   const sensors = useSensors(
@@ -208,18 +232,18 @@ export default function Home() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Calculate parallax transforms for different layers
-  const backgroundParallax = {
+  // Calculate parallax transforms for different layers (only if enabled)
+  const backgroundParallax = parallaxEnabled ? {
     transform: `translate(${mousePosition.x * 20}px, ${mousePosition.y * 20}px) scale(1.05)`
-  };
+  } : {};
 
-  const columnParallax = {
+  const columnParallax = parallaxEnabled ? {
     transform: `translate(${mousePosition.x * 10}px, ${mousePosition.y * 10}px)`
-  };
+  } : {};
 
-  const cardParallax = {
+  const cardParallax = parallaxEnabled ? {
     transform: `translate(${mousePosition.x * 5}px, ${mousePosition.y * 5}px)`
-  };
+  } : {};
 
   const { data: dbTasks = [], isLoading } = useQuery({
     queryKey: ["tasks", currentDashboardId],
@@ -653,7 +677,24 @@ export default function Home() {
               </div>
             )}
             <button 
-              onClick={() => setRepelMode(!repelMode)}
+              onClick={toggleParallax}
+              className={cn(
+                "p-2 rounded-full transition-all",
+                parallaxEnabled
+                  ? "bg-blue-600 text-white shadow-lg"
+                  : theme === "dark" 
+                    ? "text-slate-400 hover:bg-slate-800" 
+                    : theme === "glassmorphism"
+                      ? "text-white hover:bg-white/20"
+                      : "text-slate-500 hover:bg-slate-100"
+              )}
+              title={parallaxEnabled ? "Disable Parallax" : "Enable Parallax"}
+              data-testid="button-parallax"
+            >
+              <Move className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={toggleRepelMode}
               className={cn(
                 "p-2 rounded-full transition-all",
                 repelMode
@@ -860,10 +901,10 @@ export default function Home() {
               >
                 {/* Column Header */}
                 <div className={cn(
-                  "flex items-center justify-between mb-4 p-3 rounded-xl border shadow-sm",
-                  theme === "light" && "bg-white border-slate-100",
-                  theme === "glassmorphism" && "bg-white/60 backdrop-blur-md border-white/40",
-                  theme === "dark" && "bg-slate-800/80 border-slate-700/70"
+                  "flex items-center justify-between mb-4 p-3 rounded-xl border",
+                  theme === "light" && "bg-white border-slate-100 shadow-md",
+                  theme === "glassmorphism" && "bg-white/60 backdrop-blur-md border-white/40 shadow-lg shadow-blue-500/20",
+                  theme === "dark" && "bg-slate-800/80 border-slate-700/70 shadow-lg shadow-black/40"
                 )}>
                   <div className="flex items-center gap-2">
                     <div className={cn("p-1.5 rounded-md")} style={{ backgroundColor: column.color }}>
@@ -888,11 +929,11 @@ export default function Home() {
                   className={cn(
                     "flex-1 rounded-xl p-3 border flex flex-col gap-3 min-h-[500px] transition-all",
                     // Light theme
-                    theme === "light" && "bg-slate-100/50 border-slate-200/60",
+                    theme === "light" && "bg-slate-100/50 border-slate-200/60 shadow-lg shadow-slate-200/60",
                     // Glassmorphism theme
-                    theme === "glassmorphism" && "bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl",
+                    theme === "glassmorphism" && "bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl shadow-blue-500/30",
                     // Dark theme
-                    theme === "dark" && "bg-slate-800/30 backdrop-blur-md border-slate-700/50"
+                    theme === "dark" && "bg-slate-800/30 backdrop-blur-md border-slate-700/50 shadow-2xl shadow-black/50"
                   )}
                   style={{ backgroundColor: theme === "light" ? column.color + "20" : undefined }}
                   data-testid={`column-${column.name}`}

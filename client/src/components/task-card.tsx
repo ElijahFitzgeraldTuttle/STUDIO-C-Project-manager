@@ -234,10 +234,10 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
           exit={{ opacity: 0, scale: 0.95, filter: "blur(4px)" }}
           transition={{ duration: 0.2, ease: "easeOut" }}
           className={cn(
-            "group relative p-4 rounded-xl border shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer text-left w-full",
-            theme === "light" && "bg-white border-slate-100",
-            theme === "glassmorphism" && "bg-white/30 backdrop-blur-md border-white/30 shadow-lg",
-            theme === "dark" && "bg-slate-800/50 backdrop-blur-sm border-slate-700/50"
+            "group relative p-4 rounded-xl border transition-all duration-200 cursor-pointer text-left w-full",
+            theme === "light" && "bg-white border-slate-100 shadow-md hover:shadow-xl hover:shadow-slate-300/50",
+            theme === "glassmorphism" && "bg-white/30 backdrop-blur-md border-white/30 shadow-lg shadow-blue-500/20 hover:shadow-2xl hover:shadow-purple-500/30",
+            theme === "dark" && "bg-slate-800/50 backdrop-blur-sm border-slate-700/50 shadow-lg shadow-black/40 hover:shadow-2xl hover:shadow-black/60"
           )}
         >
           <div className="flex justify-between items-start gap-2 mb-1">
