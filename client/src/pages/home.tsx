@@ -407,7 +407,79 @@ export default function Home() {
         )}>
         <div className="max-w-[1800px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* Logo and title removed per user request */}
+            {dashboards.length > 0 && currentDashboardId !== null && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button 
+                    className={cn(
+                      "p-2 rounded-lg transition-all",
+                      theme === "dark" 
+                        ? "hover:bg-slate-800 text-slate-400" 
+                        : "hover:bg-slate-100 text-slate-600"
+                    )}
+                    title="Dashboard menu"
+                    data-testid="button-header-dashboard-menu"
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <div className="px-2 py-1.5 text-sm font-medium text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 mb-1">
+                    {dashboards.find(d => d.id === currentDashboardId)?.name}
+                  </div>
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      const dashboard = dashboards.find(d => d.id === currentDashboardId);
+                      if (dashboard) {
+                        startEditingDashboard(dashboard.id, dashboard.name);
+                      }
+                    }}
+                    data-testid="menu-header-rename-dashboard"
+                  >
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Rename Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setIsColumnSettingsOpen(true)}
+                    data-testid="menu-header-manage-columns"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Manage Columns
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem
+                        onSelect={(e) => e.preventDefault()}
+                        className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                        data-testid="menu-header-delete-dashboard"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Dashboard
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Dashboard?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{dashboards.find(d => d.id === currentDashboardId)?.name}"? All tasks and columns in this dashboard will be permanently deleted. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel data-testid="button-cancel-delete-dashboard-header">Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => currentDashboardId && deleteDashboardMutation.mutate(currentDashboardId)}
+                          className="bg-red-600 hover:bg-red-700"
+                          data-testid="button-confirm-delete-dashboard-header"
+                        >
+                          Delete Dashboard
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           <div className="flex items-center gap-3 ml-auto">
