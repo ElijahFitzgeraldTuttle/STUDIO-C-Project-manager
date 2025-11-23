@@ -7,7 +7,7 @@ import { fetchTasks, updateTask, getUnreadCounts, createTask, deleteTask, fetchD
 import { dbTaskToTask, taskToDbTask, type Task, type Status, statusConfig } from "@/lib/types";
 import { useUser } from "@/contexts/UserContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "wouter";
 import { DndContext, DragEndEvent, useDroppable, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
@@ -70,7 +70,7 @@ function UserAvatar() {
   );
 }
 
-function DraggableTask({ task, unreadCount, onUpdate, onDelete }: { task: Task; unreadCount: number; onUpdate: (task: Task) => void; onDelete: (taskId: number) => void }) {
+function DraggableTask({ task, unreadCount, onUpdate, onDelete, cardParallax }: { task: Task; unreadCount: number; onUpdate: (task: Task) => void; onDelete: (taskId: number) => void; cardParallax?: React.CSSProperties }) {
   const {
     attributes,
     listeners,
@@ -80,9 +80,11 @@ function DraggableTask({ task, unreadCount, onUpdate, onDelete }: { task: Task; 
     isDragging,
   } = useSortable({ id: task.id.toString() });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+  const dragTransform = CSS.Transform.toString(transform);
+  
+  const style: React.CSSProperties = {
+    transform: dragTransform || (cardParallax?.transform as string) || undefined,
+    transition: isDragging ? transition : 'transform 0.1s ease-out',
     opacity: isDragging ? 0.5 : 1,
   };
 
@@ -141,6 +143,7 @@ export default function Home() {
   const [darkModeBackground, setDarkModeBackground] = useState(() => {
     return localStorage.getItem("darkModeBackground") || "/dark-bg.jpg";
   });
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const handleBackgroundColorChange = (color: string) => {
     setBackgroundColor(color);
@@ -165,6 +168,31 @@ export default function Home() {
       },
     })
   );
+
+  // Parallax mouse tracking
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 2;
+      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      setMousePosition({ x, y });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Calculate parallax transforms for different layers
+  const backgroundParallax = {
+    transform: `translate(${mousePosition.x * 20}px, ${mousePosition.y * 20}px) scale(1.05)`
+  };
+
+  const columnParallax = {
+    transform: `translate(${mousePosition.x * 10}px, ${mousePosition.y * 10}px)`
+  };
+
+  const cardParallax = {
+    transform: `translate(${mousePosition.x * 5}px, ${mousePosition.y * 5}px)`
+  };
 
   const { data: dbTasks = [], isLoading } = useQuery({
     queryKey: ["tasks", currentDashboardId],
@@ -416,11 +444,16 @@ export default function Home() {
         {/* Animated Gradient Background for Glassmorphism */}
         {theme === "glassmorphism" && (
           <div className="fixed inset-0 -z-10 overflow-hidden bg-slate-900">
-            <div className="absolute top-0 -left-40 w-[600px] h-[600px] bg-gradient-to-br from-blue-600 to-purple-700 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob"></div>
-            <div className="absolute top-0 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-purple-600 to-blue-800 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-40 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-indigo-700 to-purple-800 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
-            <div className="absolute bottom-1/3 -right-20 w-[500px] h-[500px] bg-gradient-to-br from-blue-700 to-indigo-900 rounded-full mix-blend-normal filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-br from-purple-700 to-blue-900 rounded-full mix-blend-normal filter blur-3xl opacity-40 animate-blob"></div>
+            <div 
+              className="w-full h-full transition-transform duration-100 ease-out"
+              style={backgroundParallax}
+            >
+              <div className="absolute top-0 -left-40 w-[600px] h-[600px] bg-gradient-to-br from-blue-600 to-purple-700 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob"></div>
+              <div className="absolute top-0 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-purple-600 to-blue-800 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+              <div className="absolute -bottom-40 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-indigo-700 to-purple-800 rounded-full mix-blend-normal filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+              <div className="absolute bottom-1/3 -right-20 w-[500px] h-[500px] bg-gradient-to-br from-blue-700 to-indigo-900 rounded-full mix-blend-normal filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-br from-purple-700 to-blue-900 rounded-full mix-blend-normal filter blur-3xl opacity-40 animate-blob"></div>
+            </div>
           </div>
         )}
 
@@ -428,8 +461,11 @@ export default function Home() {
         {theme === "dark" && (
           <div key="dark-bg" className="fixed inset-0 -z-10">
             <div 
-              className="w-full h-full bg-cover bg-center transition-all duration-500"
-              style={{ backgroundImage: `url(${darkModeBackground})` }}
+              className="w-full h-full bg-cover bg-center transition-all duration-100 ease-out"
+              style={{ 
+                backgroundImage: `url(${darkModeBackground})`,
+                ...backgroundParallax
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 via-slate-900/20 to-slate-900/30"></div>
           </div>
@@ -805,7 +841,11 @@ export default function Home() {
             const Icon = defaultConfig?.icon || SlidersHorizontal;
             
             return (
-              <div key={column.id} className="flex-1 min-w-[300px] flex flex-col h-full">
+              <div 
+                key={column.id} 
+                className="flex-1 min-w-[300px] flex flex-col h-full transition-transform duration-100 ease-out"
+                style={columnParallax}
+              >
                 {/* Column Header */}
                 <div className={cn(
                   "flex items-center justify-between mb-4 p-3 rounded-xl border shadow-sm",
@@ -854,6 +894,7 @@ export default function Home() {
                           onUpdate={handleUpdateTask}
                           onDelete={(taskId) => deleteTaskMutation.mutate(taskId)}
                           unreadCount={unreadCounts[task.id] || 0}
+                          cardParallax={cardParallax}
                         />
                       ))}
                     </AnimatePresence>
