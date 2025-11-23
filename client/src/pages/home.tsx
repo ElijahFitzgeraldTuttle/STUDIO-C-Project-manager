@@ -154,7 +154,8 @@ export default function Home() {
 
   const darkBackgroundOptions = [
     { url: "/dark-bg.jpg", name: "Pixel Art" },
-    { url: "/dark-bg-forest.png", name: "Enchanted Forest" }
+    { url: "/dark-bg-forest.png", name: "Enchanted Forest" },
+    { url: "/dark-bg-mountain.png", name: "Mountain Vista" }
   ];
 
   const sensors = useSensors(
