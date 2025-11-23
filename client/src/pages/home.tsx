@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2 } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Sparkles, Moon, Sun, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask, deleteTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
@@ -99,7 +99,7 @@ function DraggableTask({ task, unreadCount, onUpdate, onDelete }: { task: Task; 
   );
 }
 
-function DroppableColumn({ id, children, className }: { id: string; children: React.ReactNode; className?: string }) {
+function DroppableColumn({ id, children, className, style }: { id: string; children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   const { setNodeRef, isOver } = useDroppable({
     id,
   });
@@ -108,6 +108,7 @@ function DroppableColumn({ id, children, className }: { id: string; children: Re
     <div 
       ref={setNodeRef} 
       className={cn(className, isOver && "ring-2 ring-indigo-400 ring-offset-2")}
+      style={style}
     >
       {children}
     </div>
@@ -134,6 +135,14 @@ export default function Home() {
   const [editingColumnColor, setEditingColumnColor] = useState("");
   const [newColumnName, setNewColumnName] = useState("");
   const [newColumnColor, setNewColumnColor] = useState("#f1f5f9");
+  const [backgroundColor, setBackgroundColor] = useState(() => {
+    return localStorage.getItem("appBackgroundColor") || "#f8fafc";
+  });
+
+  const handleBackgroundColorChange = (color: string) => {
+    setBackgroundColor(color);
+    localStorage.setItem("appBackgroundColor", color);
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -381,12 +390,15 @@ export default function Home() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className={cn(
-        "min-h-screen font-sans transition-colors duration-500 relative overflow-hidden",
-        theme === "light" && "bg-slate-50/50 text-slate-900",
-        theme === "glassmorphism" && "text-white",
-        theme === "dark" && "bg-transparent text-slate-100"
-      )}>
+      <div 
+        className={cn(
+          "min-h-screen font-sans transition-colors duration-500 relative overflow-hidden",
+          theme === "light" && "text-slate-900",
+          theme === "glassmorphism" && "text-white",
+          theme === "dark" && "bg-transparent text-slate-100"
+        )}
+        style={theme === "light" ? { backgroundColor } : undefined}
+      >
         {/* Animated Gradient Background for Glassmorphism */}
         {theme === "glassmorphism" && (
           <div className="fixed inset-0 -z-10 overflow-hidden bg-slate-900">
@@ -541,6 +553,28 @@ export default function Home() {
             >
               {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
+            {theme === "light" && (
+              <div className="relative group">
+                <label 
+                  htmlFor="bg-color-picker"
+                  className={cn(
+                    "p-2 rounded-full transition-all cursor-pointer inline-flex",
+                    "text-slate-500 hover:bg-slate-100"
+                  )}
+                  title="Change Background Color"
+                >
+                  <Palette className="w-5 h-5" />
+                </label>
+                <input 
+                  id="bg-color-picker"
+                  type="color"
+                  value={backgroundColor}
+                  onChange={(e) => handleBackgroundColorChange(e.target.value)}
+                  className="absolute opacity-0 w-0 h-0"
+                  data-testid="input-background-color"
+                />
+              </div>
+            )}
             <button 
               onClick={() => setIsColumnSettingsOpen(true)}
               className={cn(
