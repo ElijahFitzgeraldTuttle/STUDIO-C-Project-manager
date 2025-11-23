@@ -761,7 +761,12 @@ export default function Home() {
             return (
               <div key={column.id} className="flex-1 min-w-[300px] flex flex-col h-full">
                 {/* Column Header */}
-                <div className="flex items-center justify-between mb-4 px-1">
+                <div className={cn(
+                  "flex items-center justify-between mb-4 p-3 rounded-xl border shadow-sm",
+                  theme === "light" && "bg-white border-slate-100",
+                  theme === "glassmorphism" && "bg-white/30 backdrop-blur-md border-white/30",
+                  theme === "dark" && "bg-slate-800/50 border-slate-700/50"
+                )}>
                   <div className="flex items-center gap-2">
                     <div className={cn("p-1.5 rounded-md")} style={{ backgroundColor: column.color }}>
                       <Icon className={cn("w-4 h-4", defaultConfig?.color || "text-slate-600")} />
