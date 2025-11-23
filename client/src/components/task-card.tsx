@@ -658,8 +658,8 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                 )}>
                   {Object.entries(task.tracking).map(([key, value]) => (
                     <div key={key} className={cn(
-                      "flex items-center gap-3 p-2 rounded-lg transition-colors",
-                      theme === "light" && "hover:bg-white",
+                      "flex items-center gap-3 p-3 rounded-lg transition-all hover:scale-[1.02]",
+                      theme === "light" && "hover:bg-white hover:shadow-sm",
                       theme === "glassmorphism" && "hover:bg-white/50",
                       theme === "dark" && "hover:bg-slate-600/30"
                     )}>
@@ -667,7 +667,13 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                         id={`modal-tracking-${task.id}-${key}`} 
                         checked={value}
                         onCheckedChange={(checked) => handleTrackingChange(key as keyof TaskTracking, checked === true)}
-                        className="h-5 w-5 rounded-md border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                        className={cn(
+                          "h-6 w-6 rounded-lg border-2 transition-all",
+                          theme === "dark" 
+                            ? "border-slate-500 data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500" 
+                            : "border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600",
+                          "hover:border-indigo-400 data-[state=checked]:shadow-md data-[state=checked]:shadow-indigo-500/30"
+                        )}
                       />
                       <Label 
                         htmlFor={`modal-tracking-${task.id}-${key}`}
