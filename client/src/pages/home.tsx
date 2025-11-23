@@ -138,11 +138,24 @@ export default function Home() {
   const [backgroundColor, setBackgroundColor] = useState(() => {
     return localStorage.getItem("appBackgroundColor") || "#f8fafc";
   });
+  const [darkModeBackground, setDarkModeBackground] = useState(() => {
+    return localStorage.getItem("darkModeBackground") || "/dark-bg.jpg";
+  });
 
   const handleBackgroundColorChange = (color: string) => {
     setBackgroundColor(color);
     localStorage.setItem("appBackgroundColor", color);
   };
+
+  const handleDarkBackgroundChange = (bgUrl: string) => {
+    setDarkModeBackground(bgUrl);
+    localStorage.setItem("darkModeBackground", bgUrl);
+  };
+
+  const darkBackgroundOptions = [
+    { url: "/dark-bg.jpg", name: "Pixel Art" },
+    { url: "/dark-bg-forest.png", name: "Enchanted Forest" }
+  ];
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -414,8 +427,8 @@ export default function Home() {
         {theme === "dark" && (
           <div key="dark-bg" className="fixed inset-0 -z-10">
             <div 
-              className="w-full h-full bg-cover bg-center"
-              style={{ backgroundImage: 'url(/dark-bg.jpg)' }}
+              className="w-full h-full bg-cover bg-center transition-all duration-500"
+              style={{ backgroundImage: `url(${darkModeBackground})` }}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 via-slate-900/20 to-slate-900/30"></div>
           </div>
@@ -574,6 +587,38 @@ export default function Home() {
                   data-testid="input-background-color"
                 />
               </div>
+            )}
+            {theme === "dark" && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="p-2 rounded-full transition-all text-slate-400 hover:bg-slate-800"
+                    title="Change Background"
+                    data-testid="button-dark-background-picker"
+                  >
+                    <Palette className="w-5 h-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="px-2 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 mb-1">
+                    Background
+                  </div>
+                  {darkBackgroundOptions.map((option) => (
+                    <DropdownMenuItem
+                      key={option.url}
+                      onClick={() => handleDarkBackgroundChange(option.url)}
+                      className={cn(
+                        "cursor-pointer",
+                        darkModeBackground === option.url && "bg-slate-100 dark:bg-slate-800"
+                      )}
+                      data-testid={`menu-dark-bg-${option.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      {darkModeBackground === option.url && "✓ "}
+                      {option.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             <button 
               onClick={() => setIsColumnSettingsOpen(true)}
