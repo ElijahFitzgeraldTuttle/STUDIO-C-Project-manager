@@ -229,9 +229,10 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
       <DialogTrigger asChild>
         <motion.div
           layoutId={task.id.toString()}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.95, filter: "blur(4px)" }}
+          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+          exit={{ opacity: 0, scale: 0.95, filter: "blur(4px)" }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           className={cn(
             "group relative p-4 rounded-xl border shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer text-left w-full",
             theme === "light" && "bg-white border-slate-100",
