@@ -37,6 +37,13 @@ interface TaskCardProps {
   dragHandleProps?: any;
 }
 
+const trackingLabels: Record<string, string> = {
+  delivered: "Delivered",
+  invoiced: "Deposit Paid",
+  paid: "Fully Paid",
+  distributed: "Distributed",
+};
+
 export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandleProps }: TaskCardProps) {
   const [newComment, setNewComment] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -236,7 +243,6 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
           className={cn(
             "group relative p-4 rounded-xl border transition-all duration-200 cursor-pointer text-left w-full",
             theme === "light" && "bg-white border-slate-100 shadow-md hover:shadow-xl hover:shadow-slate-300/50",
-            theme === "glassmorphism" && "bg-white/30 backdrop-blur-md border-white/30 shadow-lg shadow-blue-500/20 hover:shadow-2xl hover:shadow-purple-500/30",
             theme === "dark" && "bg-slate-800/50 backdrop-blur-sm border-slate-700/50 shadow-lg shadow-black/40 hover:shadow-2xl hover:shadow-black/60"
           )}
         >
@@ -307,7 +313,6 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
             className={cn(
               "grid grid-cols-2 gap-2 mb-3 p-3 rounded-lg border",
               theme === "light" && "bg-slate-50/50 border-slate-100",
-              theme === "glassmorphism" && "bg-white/20 border-white/30",
               theme === "dark" && "bg-slate-700/30 border-slate-600/50"
             )}
             onClick={(e) => e.stopPropagation()}
@@ -329,11 +334,11 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                 <Label 
                   htmlFor={`tracking-${task.id}-${key}`}
                   className={cn(
-                    "text-xs capitalize cursor-pointer font-semibold",
+                    "text-xs cursor-pointer font-semibold",
                     theme === "dark" ? "text-slate-300" : "text-slate-600"
                   )}
                 >
-                  {key}
+                  {trackingLabels[key] || key}
                 </Label>
               </div>
             ))}
@@ -376,7 +381,6 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
       
       <DialogContent className={cn(
         "sm:max-w-[1100px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0",
-        theme === "glassmorphism" && "bg-white/80 backdrop-blur-xl border-white/30",
         theme === "dark" && "bg-slate-800 border-slate-700"
       )}>
         <div className="grid grid-cols-1 md:grid-cols-5 h-full max-h-[80vh]">
@@ -430,14 +434,12 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                 <div className={cn(
                   "space-y-2 p-4 rounded-xl border",
                   theme === "light" && "bg-slate-50 border-slate-100",
-                  theme === "glassmorphism" && "bg-white/30 border-white/30",
                   theme === "dark" && "bg-slate-700/30 border-slate-600/50"
                 )}>
                   {subtasks.map(subtask => (
                     <div key={subtask.id} className={cn(
                       "flex items-center gap-3 p-2 rounded-lg transition-colors group",
                       theme === "light" && "hover:bg-white",
-                      theme === "glassmorphism" && "hover:bg-white/50",
                       theme === "dark" && "hover:bg-slate-600/30"
                     )}>
                       <Checkbox 
@@ -499,7 +501,6 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                 <div className={cn(
                   "space-y-3 p-4 rounded-xl border",
                   theme === "light" && "bg-slate-50 border-slate-100",
-                  theme === "glassmorphism" && "bg-white/30 border-white/30",
                   theme === "dark" && "bg-slate-700/30 border-slate-600/50"
                 )}>
                   <div className="space-y-2">
@@ -533,7 +534,6 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                         <div key={payee.id} className={cn(
                           "flex flex-col gap-1 p-2 rounded-lg group",
                           theme === "light" && "bg-white",
-                          theme === "glassmorphism" && "bg-white/50",
                           theme === "dark" && "bg-slate-600/30"
                         )}>
                           <div className="flex items-center gap-2">
@@ -659,14 +659,12 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                 <div className={cn(
                   "grid grid-cols-2 gap-3 p-4 rounded-xl border",
                   theme === "light" && "bg-slate-50 border-slate-100",
-                  theme === "glassmorphism" && "bg-white/30 border-white/30",
                   theme === "dark" && "bg-slate-700/30 border-slate-600/50"
                 )}>
                   {Object.entries(task.tracking).map(([key, value]) => (
                     <div key={key} className={cn(
                       "flex items-center gap-3 p-3 rounded-lg transition-all hover:scale-[1.02]",
                       theme === "light" && "hover:bg-white hover:shadow-sm",
-                      theme === "glassmorphism" && "hover:bg-white/50",
                       theme === "dark" && "hover:bg-slate-600/30"
                     )}>
                       <Checkbox 
@@ -684,11 +682,11 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                       <Label 
                         htmlFor={`modal-tracking-${task.id}-${key}`}
                         className={cn(
-                          "text-sm capitalize cursor-pointer font-medium select-none",
+                          "text-sm cursor-pointer font-medium select-none",
                           theme === "dark" ? "text-slate-200" : "text-slate-700"
                         )}
                       >
-                        {key}
+                        {trackingLabels[key] || key}
                       </Label>
                     </div>
                   ))}
@@ -699,7 +697,6 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
               <div className={cn(
                 "space-y-1.5 p-4 rounded-lg border",
                 theme === "light" && "bg-white border-slate-100",
-                theme === "glassmorphism" && "bg-white/30 border-white/30",
                 theme === "dark" && "bg-slate-700/30 border-slate-600/50"
               )}>
                 <div className={cn(
@@ -714,7 +711,6 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                     <div key={user} className={cn(
                       "flex items-center gap-3 p-2 rounded-lg transition-colors",
                       theme === "light" && "hover:bg-slate-50",
-                      theme === "glassmorphism" && "hover:bg-white/50",
                       theme === "dark" && "hover:bg-slate-600/30"
                     )}>
                       <Checkbox
@@ -747,7 +743,6 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                   <span key={tag} className={cn(
                     "px-2.5 py-1 text-xs font-medium rounded-md border",
                     theme === "light" && "bg-slate-100 text-slate-600 border-slate-200",
-                    theme === "glassmorphism" && "bg-white/30 text-slate-700 border-white/30",
                     theme === "dark" && "bg-slate-700/50 text-slate-300 border-slate-600"
                   )}>
                     #{tag}
@@ -761,13 +756,11 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
           <div className={cn(
             "md:col-span-2 flex flex-col h-full max-h-[80vh]",
             theme === "light" && "bg-slate-50/50",
-            theme === "glassmorphism" && "bg-white/20",
             theme === "dark" && "bg-slate-900/30"
           )}>
             <div className={cn(
               "p-4 border-b backdrop-blur-sm sticky top-0 z-10",
               theme === "light" && "border-slate-200/60 bg-white/50",
-              theme === "glassmorphism" && "border-white/30 bg-white/30",
               theme === "dark" && "border-slate-700/50 bg-slate-800/50"
             )}>
               <h4 className={cn(
@@ -794,7 +787,6 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                      <div className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border shrink-0 shadow-sm",
                       theme === "light" && "bg-white text-slate-500 border-slate-200",
-                      theme === "glassmorphism" && "bg-white/50 text-slate-600 border-white/30",
                       theme === "dark" && "bg-slate-700 text-slate-300 border-slate-600"
                     )}>
                       {comment.author.charAt(0)}
@@ -813,7 +805,6 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                       <div className={cn(
                         "p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border shadow-sm leading-relaxed",
                         theme === "light" && "bg-white border-slate-100 text-slate-600",
-                        theme === "glassmorphism" && "bg-white/60 border-white/30 text-slate-700",
                         theme === "dark" && "bg-slate-700/50 border-slate-600 text-slate-300"
                       )}>
                         {comment.text}
@@ -827,7 +818,6 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
             <div className={cn(
               "p-4 border-t",
               theme === "light" && "bg-white border-slate-200/60",
-              theme === "glassmorphism" && "bg-white/30 border-white/30",
               theme === "dark" && "bg-slate-800/50 border-slate-700/50"
             )}>
               <form onSubmit={handleAddComment} className="relative">
@@ -838,7 +828,6 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                   className={cn(
                     "pr-10 border focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 py-5",
                     theme === "light" && "bg-slate-50 border-slate-200",
-                    theme === "glassmorphism" && "bg-white/50 border-white/30",
                     theme === "dark" && "bg-slate-700/50 border-slate-600 text-slate-100"
                   )}
                 />
