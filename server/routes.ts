@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTaskSchema, insertCommentSchema, insertSubtaskSchema, insertPayeeSchema, insertDashboardSchema, insertColumnSchema } from "@shared/schema";
+import { insertTaskSchema, insertCommentSchema, insertSubtaskSchema, insertPayeeSchema, insertDashboardSchema, insertColumnSchema, insertReceivableSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -385,6 +385,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to delete column" });
+    }
+  });
+
+  // Receivable routes
+  app.get("/api/receivables", async (req, res) => {
+    try {
+      const receivables = await storage.getReceivables();
+      res.json(receivables);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch receivables" });
+    }
+  });
+
+  app.post("/api/receivables", async (req, res) => {
+    try {
+      const validatedData = insertReceivableSchema.parse(req.body);
+      const receivable = await storage.createReceivable(validatedData);
+      res.status(201).json(receivable);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create receivable" });
+    }
+  });
+
+  app.patch("/api/receivables/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertReceivableSchema.partial().parse(req.body);
+      const receivable = await storage.updateReceivable(id, validatedData);
+      if (!receivable) {
+        return res.status(404).json({ error: "Receivable not found" });
+      }
+      res.json(receivable);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update receivable" });
+    }
+  });
+
+  app.delete("/api/receivables/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteReceivable(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete receivable" });
     }
   });
 

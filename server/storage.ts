@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { tasks, comments, commentReads, subtasks, payouts, payees, dashboards, columns, type Task, type InsertTask, type Comment, type InsertComment, type InsertCommentRead, type Subtask, type InsertSubtask, type Payout, type InsertPayout, type Payee, type InsertPayee, type Dashboard, type InsertDashboard, type Column, type InsertColumn } from "@shared/schema";
+import { tasks, comments, commentReads, subtasks, payouts, payees, dashboards, columns, receivables, type Task, type InsertTask, type Comment, type InsertComment, type InsertCommentRead, type Subtask, type InsertSubtask, type Payout, type InsertPayout, type Payee, type InsertPayee, type Dashboard, type InsertDashboard, type Column, type InsertColumn, type Receivable, type InsertReceivable } from "@shared/schema";
 import { eq, and, inArray, isNull } from "drizzle-orm";
 
 export interface IStorage {
@@ -44,6 +44,12 @@ export interface IStorage {
   createColumn(column: InsertColumn): Promise<Column>;
   updateColumn(id: number, column: Partial<InsertColumn>): Promise<Column | undefined>;
   deleteColumn(id: number): Promise<void>;
+
+  // Receivable operations
+  getReceivables(): Promise<Receivable[]>;
+  createReceivable(receivable: InsertReceivable): Promise<Receivable>;
+  updateReceivable(id: number, receivable: Partial<InsertReceivable>): Promise<Receivable | undefined>;
+  deleteReceivable(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -358,6 +364,28 @@ export class DatabaseStorage implements IStorage {
 
   async deleteColumn(id: number): Promise<void> {
     await db.delete(columns).where(eq(columns.id, id));
+  }
+
+  async getReceivables(): Promise<Receivable[]> {
+    return await db.select().from(receivables).orderBy(receivables.createdAt);
+  }
+
+  async createReceivable(insertReceivable: InsertReceivable): Promise<Receivable> {
+    const result = await db.insert(receivables).values(insertReceivable).returning();
+    return result[0];
+  }
+
+  async updateReceivable(id: number, receivableUpdate: Partial<InsertReceivable>): Promise<Receivable | undefined> {
+    const result = await db
+      .update(receivables)
+      .set(receivableUpdate)
+      .where(eq(receivables.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteReceivable(id: number): Promise<void> {
+    await db.delete(receivables).where(eq(receivables.id, id));
   }
 }
 

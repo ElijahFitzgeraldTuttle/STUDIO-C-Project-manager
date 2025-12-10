@@ -1,4 +1,4 @@
-import type { Task, Comment, InsertTask, InsertComment, Subtask, InsertSubtask, Payout, Payee, InsertPayee, Dashboard, InsertDashboard, Column, InsertColumn } from "@shared/schema";
+import type { Task, Comment, InsertTask, InsertComment, Subtask, InsertSubtask, Payout, Payee, InsertPayee, Dashboard, InsertDashboard, Column, InsertColumn, Receivable, InsertReceivable } from "@shared/schema";
 
 const API_BASE = "/api";
 
@@ -215,4 +215,38 @@ export async function deleteColumn(id: number): Promise<void> {
     method: "DELETE",
   });
   if (!response.ok) throw new Error("Failed to delete column");
+}
+
+// Receivable API functions
+export async function fetchReceivables(): Promise<Receivable[]> {
+  const response = await fetch(`${API_BASE}/receivables`);
+  if (!response.ok) throw new Error("Failed to fetch receivables");
+  return response.json();
+}
+
+export async function createReceivable(receivable: InsertReceivable): Promise<Receivable> {
+  const response = await fetch(`${API_BASE}/receivables`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(receivable),
+  });
+  if (!response.ok) throw new Error("Failed to create receivable");
+  return response.json();
+}
+
+export async function updateReceivable(id: number, receivable: Partial<InsertReceivable>): Promise<Receivable> {
+  const response = await fetch(`${API_BASE}/receivables/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(receivable),
+  });
+  if (!response.ok) throw new Error("Failed to update receivable");
+  return response.json();
+}
+
+export async function deleteReceivable(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE}/receivables/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete receivable");
 }

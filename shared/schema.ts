@@ -77,6 +77,15 @@ export const columns = pgTable("columns", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const receivables = pgTable("receivables", {
+  id: serial("id").primaryKey(),
+  clientName: text("client_name").notNull(),
+  description: text("description").notNull().default(""),
+  amount: integer("amount").notNull().default(0),
+  received: boolean("received").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -120,6 +129,11 @@ export const insertColumnSchema = createInsertSchema(columns).omit({
   createdAt: true,
 });
 
+export const insertReceivableSchema = createInsertSchema(receivables).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
@@ -138,3 +152,5 @@ export type InsertDashboard = z.infer<typeof insertDashboardSchema>;
 export type Dashboard = typeof dashboards.$inferSelect;
 export type InsertColumn = z.infer<typeof insertColumnSchema>;
 export type Column = typeof columns.$inferSelect;
+export type InsertReceivable = z.infer<typeof insertReceivableSchema>;
+export type Receivable = typeof receivables.$inferSelect;
