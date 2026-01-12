@@ -21,6 +21,7 @@ export const tasks = pgTable("tasks", {
   paidTracking: boolean("paid_tracking").notNull().default(false),
   distributedTracking: boolean("distributed_tracking").notNull().default(false),
   dashboardId: integer("dashboard_id").references(() => dashboards.id, { onDelete: "set null" }),
+  dueDate: timestamp("due_date"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -44,6 +45,8 @@ export const subtasks = pgTable("subtasks", {
   taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   completed: boolean("completed").notNull().default(false),
+  assignees: text("assignees").array().notNull().default(sql`ARRAY[]::text[]`),
+  dueDate: timestamp("due_date"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
