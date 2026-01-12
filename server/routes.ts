@@ -33,7 +33,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new task
   app.post("/api/tasks", async (req, res) => {
     try {
-      const validatedData = insertTaskSchema.parse(req.body);
+      const body = { ...req.body };
+      if (body.dueDate !== undefined) {
+        body.dueDate = body.dueDate ? new Date(body.dueDate) : null;
+      }
+      const validatedData = insertTaskSchema.parse(body);
       const task = await storage.createTask(validatedData);
       res.status(201).json(task);
     } catch (error) {
@@ -48,7 +52,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/tasks/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertTaskSchema.partial().parse(req.body);
+      const body = { ...req.body };
+      if (body.dueDate !== undefined) {
+        body.dueDate = body.dueDate ? new Date(body.dueDate) : null;
+      }
+      const validatedData = insertTaskSchema.partial().parse(body);
       const task = await storage.updateTask(id, validatedData);
       if (!task) {
         return res.status(404).json({ error: "Task not found" });
@@ -167,8 +175,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tasks/:id/subtasks", async (req, res) => {
     try {
       const taskId = parseInt(req.params.id);
+      const body = { ...req.body };
+      if (body.dueDate !== undefined) {
+        body.dueDate = body.dueDate ? new Date(body.dueDate) : null;
+      }
       const validatedData = insertSubtaskSchema.parse({
-        ...req.body,
+        ...body,
         taskId,
       });
       const subtask = await storage.createSubtask(validatedData);
@@ -184,7 +196,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/subtasks/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertSubtaskSchema.partial().parse(req.body);
+      const body = { ...req.body };
+      if (body.dueDate !== undefined) {
+        body.dueDate = body.dueDate ? new Date(body.dueDate) : null;
+      }
+      const validatedData = insertSubtaskSchema.partial().parse(body);
       const subtask = await storage.updateSubtask(id, validatedData);
       if (!subtask) {
         return res.status(404).json({ error: "Subtask not found" });

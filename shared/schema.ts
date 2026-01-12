@@ -94,7 +94,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
 });
 
-export const insertTaskSchema = createInsertSchema(tasks).omit({
+export const insertTaskSchema = createInsertSchema(tasks, {
+  dueDate: z.union([z.date(), z.null()]).optional(),
+}).omit({
   id: true,
   createdAt: true,
 });
@@ -109,7 +111,9 @@ export const insertCommentReadSchema = createInsertSchema(commentReads).omit({
   readAt: true,
 });
 
-export const insertSubtaskSchema = createInsertSchema(subtasks).omit({
+export const insertSubtaskSchema = createInsertSchema(subtasks, {
+  dueDate: z.union([z.date(), z.null()]).optional(),
+}).omit({
   id: true,
   createdAt: true,
 });

@@ -18,6 +18,7 @@ export interface Task {
   assignees: string[];
   tags: string[];
   tracking: TaskTracking;
+  dueDate: string | null;
 }
 
 export interface Comment {
@@ -42,6 +43,7 @@ export function dbTaskToTask(dbTask: DBTask): Task {
       paid: dbTask.paidTracking,
       distributed: dbTask.distributedTracking,
     },
+    dueDate: dbTask.dueDate ? (typeof dbTask.dueDate === 'string' ? dbTask.dueDate : dbTask.dueDate.toISOString()) : null,
   };
 }
 
@@ -54,6 +56,7 @@ export function taskToDbTask(task: Partial<Task>): any {
   if (task.status !== undefined) dbTask.status = task.status;
   if (task.assignees !== undefined) dbTask.assignees = task.assignees;
   if (task.tags !== undefined) dbTask.tags = task.tags;
+  if (task.dueDate !== undefined) dbTask.dueDate = task.dueDate;
 
   if (task.tracking) {
     dbTask.deliveredTracking = task.tracking.delivered;

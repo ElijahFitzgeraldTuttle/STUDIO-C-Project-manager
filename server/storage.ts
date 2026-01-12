@@ -74,9 +74,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTask(id: number, updateData: Partial<InsertTask>): Promise<Task | undefined> {
+    const data: any = { ...updateData };
+    if (data.dueDate !== undefined) {
+      if (typeof data.dueDate === 'string') {
+        data.dueDate = data.dueDate ? new Date(data.dueDate) : null;
+      }
+    }
     const result = await db
       .update(tasks)
-      .set(updateData)
+      .set(data)
       .where(eq(tasks.id, id))
       .returning();
     return result[0];
@@ -196,9 +202,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSubtask(id: number, subtaskUpdate: Partial<InsertSubtask>): Promise<Subtask | undefined> {
+    const updateData: any = { ...subtaskUpdate };
+    if (updateData.dueDate !== undefined) {
+      if (typeof updateData.dueDate === 'string') {
+        updateData.dueDate = updateData.dueDate ? new Date(updateData.dueDate) : null;
+      }
+    }
     const result = await db
       .update(subtasks)
-      .set(subtaskUpdate)
+      .set(updateData)
       .where(eq(subtasks.id, id))
       .returning();
     return result[0];

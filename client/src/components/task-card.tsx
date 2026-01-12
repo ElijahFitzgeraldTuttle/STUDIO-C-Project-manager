@@ -1,6 +1,9 @@
 import { type Task, type TaskTracking, type Comment, statusConfig } from "@/lib/types";
 import type { Subtask, Payout, Payee, InsertPayee } from "@shared/schema";
-import { MoreHorizontal, User, CheckCircle2, MessageSquare, Send, Bell, ListTodo, X, Plus, DollarSign, Trash2, GripVertical } from "lucide-react";
+import { MoreHorizontal, User, CheckCircle2, MessageSquare, Send, Bell, ListTodo, X, Plus, DollarSign, Trash2, GripVertical, Calendar, AlertCircle } from "lucide-react";
+import { format, isPast, isToday } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -157,8 +160,8 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
   });
 
   const toggleSubtaskMutation = useMutation({
-    mutationFn: ({ id, completed }: { id: number; completed: boolean }) =>
-      updateSubtask(id, { completed }),
+    mutationFn: ({ id, data }: { id: number; data: Partial<Subtask> }) =>
+      updateSubtask(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subtasks", task.id] });
     },
@@ -308,6 +311,86 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
             {task.description}
           </p>
 
+          {/* Due Date Badge */}
+          {task.dueDate && (
+            <div className={cn(
+              "flex items-center gap-1.5 text-xs mb-3 px-2 py-1 rounded-md w-fit",
+              isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate)) && "bg-red-100 text-red-600",
+              isToday(new Date(task.dueDate)) && "bg-amber-100 text-amber-600",
+              !isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate)) && (theme === "dark" ? "bg-slate-700/50 text-slate-300" : "bg-slate-100 text-slate-600")
+            )}>
+              {isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate)) && <AlertCircle className="w-3 h-3" />}
+              <Calendar className="w-3 h-3" />
+              <span>{format(new Date(task.dueDate), "MMM d")}</span>
+            </div>
+          )}
+
+          {/* Subtasks Preview */}
+          {subtasks.length > 0 && (
+            <div 
+              className={cn(
+                "mb-3 p-2 rounded-lg border",
+                theme === "light" && "bg-slate-50/50 border-slate-100",
+                theme === "dark" && "bg-slate-700/20 border-slate-600/50"
+              )}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className={cn(
+                "flex items-center gap-1.5 text-[10px] font-medium mb-2",
+                theme === "dark" ? "text-slate-400" : "text-slate-500"
+              )}>
+                <ListTodo className="w-3 h-3" />
+                <span>{subtasks.filter(s => s.completed).length}/{subtasks.length} complete</span>
+              </div>
+              <div className="space-y-1">
+                {subtasks.slice(0, 3).map(subtask => {
+                  const subtaskDueDate = subtask.dueDate ? new Date(subtask.dueDate) : null;
+                  const isOverdue = subtaskDueDate && !subtask.completed && isPast(subtaskDueDate) && !isToday(subtaskDueDate);
+                  return (
+                    <div key={subtask.id} className="flex items-center gap-2">
+                      <Checkbox 
+                        checked={subtask.completed}
+                        onCheckedChange={(checked) => toggleSubtaskMutation.mutate({ id: subtask.id, data: { completed: checked === true } })}
+                        className="h-3.5 w-3.5 rounded border-slate-300"
+                        data-testid={`card-checkbox-subtask-${subtask.id}`}
+                      />
+                      <span className={cn(
+                        "flex-1 text-xs truncate",
+                        subtask.completed && "line-through text-slate-400",
+                        !subtask.completed && theme === "dark" && "text-slate-300",
+                        !subtask.completed && theme === "light" && "text-slate-600"
+                      )}>
+                        {subtask.title}
+                      </span>
+                      {subtask.assignees && subtask.assignees.length > 0 && (
+                        <div className="flex -space-x-1">
+                          {subtask.assignees.slice(0, 2).map(a => (
+                            <div 
+                              key={a}
+                              className="w-4 h-4 rounded-full bg-indigo-500 text-white text-[8px] flex items-center justify-center font-medium border border-white"
+                              title={a}
+                            >
+                              {a.charAt(0)}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {isOverdue && <AlertCircle className="w-3 h-3 text-red-500" />}
+                    </div>
+                  );
+                })}
+                {subtasks.length > 3 && (
+                  <div className={cn(
+                    "text-[10px] pl-5",
+                    theme === "dark" ? "text-slate-400" : "text-slate-500"
+                  )}>
+                    +{subtasks.length - 3} more
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Tracking Checkboxes */}
           <div 
             className={cn(
@@ -402,6 +485,43 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                 )}>
                   {statusConfig[task.status].label}
                 </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "h-7 text-xs gap-1",
+                        task.dueDate && isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate)) && "border-red-300 text-red-600 bg-red-50",
+                        task.dueDate && isToday(new Date(task.dueDate)) && "border-amber-300 text-amber-600 bg-amber-50"
+                      )}
+                      data-testid="button-task-due-date"
+                    >
+                      <Calendar className="w-3 h-3" />
+                      {task.dueDate ? format(new Date(task.dueDate), "MMM d, yyyy") : "Set due date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={task.dueDate ? new Date(task.dueDate) : undefined}
+                      onSelect={(date) => onUpdate({ ...task, dueDate: date ? date.toISOString() : null })}
+                      initialFocus
+                    />
+                    {task.dueDate && (
+                      <div className="p-2 border-t">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full text-xs"
+                          onClick={() => onUpdate({ ...task, dueDate: null })}
+                        >
+                          Clear due date
+                        </Button>
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
               </div>
               <DialogTitle className={cn(
                 "text-lg leading-snug",
@@ -436,36 +556,106 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                   theme === "light" && "bg-slate-50 border-slate-100",
                   theme === "dark" && "bg-slate-700/30 border-slate-600/50"
                 )}>
-                  {subtasks.map(subtask => (
-                    <div key={subtask.id} className={cn(
-                      "flex items-center gap-3 p-2 rounded-lg transition-colors group",
-                      theme === "light" && "hover:bg-white",
-                      theme === "dark" && "hover:bg-slate-600/30"
-                    )}>
-                      <Checkbox 
-                        checked={subtask.completed}
-                        onCheckedChange={(checked) => toggleSubtaskMutation.mutate({ id: subtask.id, completed: checked === true })}
-                        className="h-5 w-5 rounded-md border-slate-300"
-                        data-testid={`checkbox-subtask-${subtask.id}`}
-                      />
-                      <span className={cn(
-                        "flex-1 text-sm",
-                        subtask.completed && "line-through text-slate-400",
-                        !subtask.completed && theme === "dark" && "text-slate-200"
+                  {subtasks.map(subtask => {
+                    const subtaskDueDate = subtask.dueDate ? new Date(subtask.dueDate) : null;
+                    const isOverdue = subtaskDueDate && !subtask.completed && isPast(subtaskDueDate) && !isToday(subtaskDueDate);
+                    const isDueToday = subtaskDueDate && isToday(subtaskDueDate);
+                    return (
+                      <div key={subtask.id} className={cn(
+                        "p-2 rounded-lg transition-colors group",
+                        theme === "light" && "hover:bg-white",
+                        theme === "dark" && "hover:bg-slate-600/30"
                       )}>
-                        {subtask.title}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => deleteSubtaskMutation.mutate(subtask.id)}
-                        data-testid={`button-delete-subtask-${subtask.id}`}
-                      >
-                        <X className="w-3.5 h-3.5 text-slate-400" />
-                      </Button>
-                    </div>
-                  ))}
+                        <div className="flex items-center gap-3">
+                          <Checkbox 
+                            checked={subtask.completed}
+                            onCheckedChange={(checked) => toggleSubtaskMutation.mutate({ id: subtask.id, data: { completed: checked === true } })}
+                            className="h-5 w-5 rounded-md border-slate-300"
+                            data-testid={`checkbox-subtask-${subtask.id}`}
+                          />
+                          <span className={cn(
+                            "flex-1 text-sm",
+                            subtask.completed && "line-through text-slate-400",
+                            !subtask.completed && theme === "dark" && "text-slate-200"
+                          )}>
+                            {subtask.title}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => deleteSubtaskMutation.mutate(subtask.id)}
+                            data-testid={`button-delete-subtask-${subtask.id}`}
+                          >
+                            <X className="w-3.5 h-3.5 text-slate-400" />
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 ml-8">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className={cn(
+                                  "h-7 text-xs gap-1",
+                                  isOverdue && "border-red-300 text-red-600 bg-red-50",
+                                  isDueToday && "border-amber-300 text-amber-600 bg-amber-50"
+                                )}
+                              >
+                                <Calendar className="w-3 h-3" />
+                                {subtaskDueDate ? format(subtaskDueDate, "MMM d") : "Due date"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <CalendarComponent
+                                mode="single"
+                                selected={subtaskDueDate || undefined}
+                                onSelect={(date) => toggleSubtaskMutation.mutate({ id: subtask.id, data: { dueDate: date || null } as any })}
+                                initialFocus
+                              />
+                              {subtaskDueDate && (
+                                <div className="p-2 border-t">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="w-full text-xs"
+                                    onClick={() => toggleSubtaskMutation.mutate({ id: subtask.id, data: { dueDate: null } })}
+                                  >
+                                    Clear due date
+                                  </Button>
+                                </div>
+                              )}
+                            </PopoverContent>
+                          </Popover>
+                          <div className="flex gap-1">
+                            {AVAILABLE_USERS.map(user => (
+                              <button
+                                key={user}
+                                onClick={() => {
+                                  const currentAssignees = subtask.assignees || [];
+                                  const newAssignees = currentAssignees.includes(user)
+                                    ? currentAssignees.filter(a => a !== user)
+                                    : [...currentAssignees, user];
+                                  toggleSubtaskMutation.mutate({ id: subtask.id, data: { assignees: newAssignees } });
+                                }}
+                                className={cn(
+                                  "w-6 h-6 rounded-full text-xs font-medium border transition-all",
+                                  subtask.assignees?.includes(user)
+                                    ? "bg-indigo-500 text-white border-indigo-500"
+                                    : theme === "dark"
+                                      ? "bg-slate-700 text-slate-400 border-slate-600 hover:border-indigo-400"
+                                      : "bg-slate-100 text-slate-400 border-slate-200 hover:border-indigo-400"
+                                )}
+                                title={user}
+                              >
+                                {user.charAt(0)}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                   <form onSubmit={handleAddSubtask} className="flex gap-2 mt-3">
                     <Input 
                       value={newSubtaskTitle}
