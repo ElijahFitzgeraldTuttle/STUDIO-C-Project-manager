@@ -463,10 +463,10 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
       </DialogTrigger>
       
       <DialogContent className={cn(
-        "sm:max-w-[1100px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0",
+        "sm:max-w-[1100px] max-h-[90vh] overflow-y-auto flex flex-col p-0 gap-0",
         theme === "dark" && "bg-slate-800 border-slate-700"
       )}>
-        <div className="grid grid-cols-1 md:grid-cols-5 h-full max-h-[80vh]">
+        <div className="grid grid-cols-1 md:grid-cols-5 h-full min-h-0">
           
           {/* Left Column: Task Details */}
           <div className={cn(
@@ -478,9 +478,9 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                 <div className={cn("p-2 rounded-lg", statusConfig[task.status].bg)}>
                   <StatusIcon className={cn("w-5 h-5", statusConfig[task.status].color)} />
                 </div>
-                <div className={cn("text-xs font-medium px-2.5 py-0.5 rounded-full border", 
+                <div className={cn("text-xs font-semibold px-2.5 py-1 rounded-full border", 
                   statusConfig[task.status].bg, 
-                  statusConfig[task.status].color,
+                  theme === "dark" ? "text-white" : statusConfig[task.status].color,
                   statusConfig[task.status].borderColor
                 )}>
                   {statusConfig[task.status].label}
@@ -491,13 +491,17 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                       variant="outline"
                       size="sm"
                       className={cn(
-                        "h-7 text-xs gap-1",
-                        task.dueDate && isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate)) && "border-red-300 text-red-600 bg-red-50",
-                        task.dueDate && isToday(new Date(task.dueDate)) && "border-amber-300 text-amber-600 bg-amber-50"
+                        "h-8 text-xs font-medium gap-1.5",
+                        theme === "dark" && !task.dueDate && "bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600",
+                        theme === "light" && !task.dueDate && "bg-white border-slate-300 text-slate-700",
+                        task.dueDate && isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate)) && "border-red-400 text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400",
+                        task.dueDate && isToday(new Date(task.dueDate)) && "border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-400",
+                        task.dueDate && !isPast(new Date(task.dueDate)) && theme === "dark" && "bg-slate-700 border-slate-600 text-slate-200",
+                        task.dueDate && !isPast(new Date(task.dueDate)) && theme === "light" && "bg-white border-slate-300 text-slate-700"
                       )}
                       data-testid="button-task-due-date"
                     >
-                      <Calendar className="w-3 h-3" />
+                      <Calendar className="w-3.5 h-3.5" />
                       {task.dueDate ? format(new Date(task.dueDate), "MMM d, yyyy") : "Set due date"}
                     </Button>
                   </PopoverTrigger>
