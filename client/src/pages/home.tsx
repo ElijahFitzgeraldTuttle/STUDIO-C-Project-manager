@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Mountain, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, Apple, Sun, Moon } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Mountain, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, Apple, Sun, Moon, CheckSquare } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask, deleteTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
@@ -170,11 +170,13 @@ export default function Home() {
   const [editingDashboardId, setEditingDashboardId] = useState<number | null>(null);
   const [editingDashboardName, setEditingDashboardName] = useState("");
   const [isColumnSettingsOpen, setIsColumnSettingsOpen] = useState(false);
+  const [isTrackingSettingsOpen, setIsTrackingSettingsOpen] = useState(false);
   const [editingColumnId, setEditingColumnId] = useState<number | null>(null);
   const [editingColumnName, setEditingColumnName] = useState("");
   const [editingColumnColor, setEditingColumnColor] = useState("");
   const [newColumnName, setNewColumnName] = useState("");
   const [newColumnColor, setNewColumnColor] = useState("#f1f5f9");
+  const [newTrackingField, setNewTrackingField] = useState("");
   const [mousePixelPosition, setMousePixelPosition] = useState({ x: 0, y: 0 });
   const [repelMode, setRepelMode] = useState(false);
   const [plainLayout, setPlainLayout] = useState(() => {
@@ -292,6 +294,8 @@ export default function Home() {
     queryFn: fetchDashboards,
   });
 
+  const currentDashboard = dashboards.find(d => d.id === currentDashboardId);
+
   // Set current dashboard to first one when dashboards load
   if (dashboards.length > 0 && currentDashboardId === null) {
     setCurrentDashboardId(dashboards[0].id);
@@ -314,7 +318,7 @@ export default function Home() {
   });
 
   const updateDashboardMutation = useMutation({
-    mutationFn: ({ id, name }: { id: number; name: string }) => updateDashboard(id, { name }),
+    mutationFn: ({ id, updates }: { id: number; updates: { name?: string; trackingFields?: string[] } }) => updateDashboard(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dashboards"] });
       setEditingDashboardId(null);
@@ -372,7 +376,7 @@ export default function Home() {
   const handleRenameDashboard = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingDashboardName.trim() || editingDashboardId === null) return;
-    updateDashboardMutation.mutate({ id: editingDashboardId, name: editingDashboardName });
+    updateDashboardMutation.mutate({ id: editingDashboardId, updates: { name: editingDashboardName } });
   };
 
   const startEditingDashboard = (id: number, name: string) => {
@@ -556,6 +560,13 @@ export default function Home() {
                   >
                     <Settings className="w-4 h-4 mr-2" />
                     Manage Columns
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setIsTrackingSettingsOpen(true)}
+                    data-testid="menu-header-manage-tracking"
+                  >
+                    <CheckSquare className="w-4 h-4 mr-2" />
+                    Manage Checkboxes
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <AlertDialog>
@@ -1081,6 +1092,68 @@ export default function Home() {
             >
               <Plus className="w-4 h-4 mr-1" />
               Add Column
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tracking Settings Dialog */}
+      <Dialog open={isTrackingSettingsOpen} onOpenChange={setIsTrackingSettingsOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Manage Tracking Checkboxes</DialogTitle>
+            <DialogDescription>
+              Customize the checkboxes shown on task cards for this dashboard
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 my-4">
+            {currentDashboard?.trackingFields?.map((field, index) => (
+              <div key={index} className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <CheckSquare className="w-4 h-4 text-slate-500" />
+                <span className="flex-1 font-medium capitalize">{field.replace(/_/g, ' ')}</span>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+                  onClick={() => {
+                    if (!currentDashboard) return;
+                    const newFields = currentDashboard.trackingFields.filter((_, i) => i !== index);
+                    updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingFields: newFields } });
+                  }}
+                  data-testid={`button-delete-tracking-${index}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!newTrackingField.trim() || !currentDashboard) return;
+              const newFields = [...(currentDashboard.trackingFields || []), newTrackingField.trim()];
+              updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingFields: newFields } });
+              setNewTrackingField("");
+            }} 
+            className="flex items-center gap-2 p-3 bg-slate-100 rounded-lg border-2 border-dashed border-slate-300"
+          >
+            <Input
+              value={newTrackingField}
+              onChange={(e) => setNewTrackingField(e.target.value)}
+              className="h-9 flex-1 bg-white"
+              placeholder="New checkbox label (e.g., Deposit Paid)"
+              data-testid="input-new-tracking-field"
+            />
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!newTrackingField.trim()}
+              data-testid="button-create-tracking-field"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Add
             </Button>
           </form>
         </DialogContent>
