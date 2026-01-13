@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Mountain, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, Apple, Sun, Moon, CheckSquare } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, LogOut, Mountain, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, Apple, Sun, Moon, CheckSquare, Zap, Layout } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { fetchTasks, updateTask, getUnreadCounts, createTask, deleteTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
@@ -113,13 +113,13 @@ function DraggableTask({ task, unreadCount, onUpdate, onDelete, repelMode, mouse
   }, [repelMode, mousePixelPosition, cardElement]);
 
   const dragTransform = CSS.Transform.toString(transform);
-  
+
   let finalTransform = dragTransform || undefined;
-  
+
   if (repelMode && !isDragging) {
     finalTransform = `translate(${repelTransform.x}px, ${repelTransform.y}px)`;
   }
-  
+
   const style: React.CSSProperties = {
     transform: finalTransform,
     transition: isDragging ? transition : repelMode ? 'transform 0.05s ease-out' : 'transform 0.1s ease-out',
@@ -129,8 +129,8 @@ function DraggableTask({ task, unreadCount, onUpdate, onDelete, repelMode, mouse
 
   return (
     <div ref={(node) => { setNodeRef(node); setCardElement(node); }} style={style} {...attributes}>
-      <TaskCard 
-        task={task} 
+      <TaskCard
+        task={task}
         onUpdate={onUpdate}
         onDelete={onDelete}
         unreadCount={unreadCount}
@@ -148,8 +148,8 @@ function DroppableColumn({ id, children, className, style }: { id: string; child
   });
 
   return (
-    <div 
-      ref={setNodeRef} 
+    <div
+      ref={setNodeRef}
       className={cn(className, isOver && "ring-2 ring-indigo-400 ring-offset-2")}
       style={style}
     >
@@ -189,10 +189,10 @@ export default function Home() {
   // Set repel mode based on user-specific localStorage key
   useEffect(() => {
     if (!currentUser) return;
-    
+
     const userKey = `repelMode-${currentUser}`;
     const saved = localStorage.getItem(userKey);
-    
+
     if (saved !== null) {
       setRepelMode(saved === "true");
     } else {
@@ -228,7 +228,7 @@ export default function Home() {
 
   const toggleRepelMode = () => {
     if (!currentUser) return;
-    
+
     const newValue = !repelMode;
     setRepelMode(newValue);
     localStorage.setItem(`repelMode-${currentUser}`, String(newValue));
@@ -321,7 +321,7 @@ export default function Home() {
   });
 
   const updateDashboardMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: number; updates: { name?: string; trackingFields?: string[] } }) => updateDashboard(id, updates),
+    mutationFn: ({ id, updates }: { id: number; updates: { name?: string; trackingFields?: string[]; trackingLabels?: string } }) => updateDashboard(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dashboards"] });
       setEditingDashboardId(null);
@@ -410,13 +410,13 @@ export default function Home() {
   const handleMoveColumn = (id: number, direction: 'up' | 'down') => {
     const currentIndex = columns.findIndex(col => col.id === id);
     if (currentIndex === -1) return;
-    
+
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
     if (targetIndex < 0 || targetIndex >= columns.length) return;
-    
+
     const currentColumn = columns[currentIndex];
     const targetColumn = columns[targetIndex];
-    
+
     // Swap the order values
     updateColumnMutation.mutate({ id: currentColumn.id, updates: { order: targetColumn.order } });
     updateColumnMutation.mutate({ id: targetColumn.id, updates: { order: currentColumn.order } });
@@ -456,21 +456,21 @@ export default function Home() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     if (!over) return;
-    
+
     const taskId = parseInt(active.id.toString());
     const newStatus = over.id as string;
-    
+
     // Validate that the drop target is a valid column
     const validStatuses = columns.map(col => col.name);
     if (!validStatuses.includes(newStatus)) return;
-    
+
     const task = tasks.find(t => t.id === taskId);
     if (task && task.status !== newStatus) {
       handleUpdateTask({ ...task, status: newStatus as Status });
     }
-    
+
     setActiveId(null);
   };
 
@@ -492,7 +492,7 @@ export default function Home() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div 
+      <div
         className={cn(
           "min-h-screen font-sans transition-colors duration-500 relative isolate",
           theme === "light" && !plainLayout && "bg-slate-50 text-slate-900",
@@ -504,9 +504,9 @@ export default function Home() {
         {/* Background Image (only when not in plain layout) */}
         {!plainLayout && (
           <div className="fixed inset-0 -z-10 pointer-events-none">
-            <div 
+            <div
               className="w-full h-full bg-cover bg-center"
-              style={{ 
+              style={{
                 backgroundImage: 'url(/dark-bg-default.png)'
               }}
             />
@@ -518,649 +518,516 @@ export default function Home() {
           </div>
         )}
         {/* Header */}
+        {/* Header */}
         <header className={cn(
-          "sticky top-0 z-10 backdrop-blur-md border-b px-6 py-4 transition-all",
+          "sticky top-0 z-10 backdrop-blur-md border-b px-6 py-2 transition-all",
           theme === "light" && "bg-white/80 border-slate-200/60",
           theme === "dark" && "bg-slate-900/80 border-slate-700/50"
         )}>
-        <div className="max-w-[1800px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {dashboards.length > 0 && currentDashboardId !== null && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button 
-                    className={cn(
-                      "p-2 rounded-lg transition-all",
-                      theme === "dark" 
-                        ? "hover:bg-slate-800 text-slate-400" 
-                        : "hover:bg-slate-100 text-slate-600"
-                    )}
-                    title="Dashboard menu"
-                    data-testid="button-header-dashboard-menu"
-                  >
-                    <MoreVertical className="w-5 h-5" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <div className="px-2 py-1.5 text-sm font-medium text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 mb-1">
-                    {dashboards.find(d => d.id === currentDashboardId)?.name}
-                  </div>
-                  <DropdownMenuItem 
-                    onClick={() => {
-                      const dashboard = dashboards.find(d => d.id === currentDashboardId);
-                      if (dashboard) {
-                        startEditingDashboard(dashboard.id, dashboard.name);
-                      }
-                    }}
-                    data-testid="menu-header-rename-dashboard"
-                  >
-                    <Edit2 className="w-4 h-4 mr-2" />
-                    Rename Dashboard
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setIsColumnSettingsOpen(true)}
-                    data-testid="menu-header-manage-columns"
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    Manage Columns
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setIsTrackingSettingsOpen(true)}
-                    data-testid="menu-header-manage-tracking"
-                  >
-                    <CheckSquare className="w-4 h-4 mr-2" />
-                    Manage Checkboxes
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <DropdownMenuItem
-                        onSelect={(e) => e.preventDefault()}
-                        className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                        data-testid="menu-header-delete-dashboard"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete Dashboard
-                      </DropdownMenuItem>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Dashboard?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{dashboards.find(d => d.id === currentDashboardId)?.name}"? All tasks and columns in this dashboard will be permanently deleted. This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel data-testid="button-cancel-delete-dashboard-header">Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => currentDashboardId && deleteDashboardMutation.mutate(currentDashboardId)}
-                          className="bg-red-600 hover:bg-red-700"
-                          data-testid="button-confirm-delete-dashboard-header"
-                        >
-                          Delete Dashboard
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3 ml-auto">
-            <Link href="/pending-payouts">
-              <button 
-                className={cn(
-                  "p-2 rounded-full transition-all",
-                  theme === "dark" 
-                    ? "text-slate-400 hover:bg-slate-800" 
-                    : "text-slate-500 hover:bg-slate-100"
-                )}
-                title="Pending Payouts"
-                data-testid="button-pending-payouts"
-              >
-                <DollarSign className="w-5 h-5" />
-              </button>
-            </Link>
-            <button 
-              onClick={cycleLayoutMode}
-              className={cn(
-                "p-2 rounded-full transition-all",
-                plainLayout && theme === "dark"
-                  ? "bg-slate-800 text-slate-300 shadow-lg"
-                  : plainLayout && theme === "light"
-                    ? "bg-amber-400 text-slate-900 shadow-lg"
-                    : theme === "dark" 
-                      ? "bg-slate-800 text-amber-400 shadow-lg"
-                      : "text-slate-500 hover:bg-slate-100"
-              )}
-              title={!plainLayout ? "Mountain Background" : theme === "light" ? "Light Mode" : "Dark Mode"}
-              data-testid="button-layout-mode"
-            >
-              {!plainLayout ? <Mountain className="w-5 h-5" /> : theme === "light" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-            <button 
-              onClick={toggleRepelMode}
-              className={cn(
-                "p-2 rounded-full transition-all",
-                repelMode
-                  ? "bg-purple-600 text-white shadow-lg"
-                  : theme === "dark" 
-                    ? "text-slate-400 hover:bg-slate-800" 
-                    : "text-slate-500 hover:bg-slate-100"
-              )}
-              title={repelMode ? "Disable Repel Mode" : "Enable Repel Mode"}
-              data-testid="button-repel-mode"
-            >
-              <Apple className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={() => setIsColumnSettingsOpen(true)}
-              className={cn(
-                "p-2 rounded-full transition-all",
-                theme === "dark" 
-                  ? "text-slate-400 hover:bg-slate-800" 
-                  : "text-slate-500 hover:bg-slate-100"
-              )}
-              title="Manage Columns"
-              data-testid="button-column-settings"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-            <UserAvatar />
-          </div>
-        </div>
-      </header>
-
-      {/* Dashboard Tabs */}
-      <div className={cn(
-        "border-b px-6 py-2",
-        theme === "light" && "border-slate-200/60 bg-white/50",
-        theme === "dark" && "border-slate-700/50 bg-slate-900/50"
-      )}>
-        <div className="max-w-[1800px] mx-auto flex items-center gap-2">
-          {dashboards.map(dashboard => (
-            editingDashboardId === dashboard.id ? (
-              <form key={dashboard.id} onSubmit={handleRenameDashboard} className="flex items-center gap-2">
-                <Input
-                  value={editingDashboardName}
-                  onChange={(e) => setEditingDashboardName(e.target.value)}
-                  className="h-8 w-32"
-                  autoFocus
-                  onBlur={() => {
-                    if (editingDashboardName.trim()) {
-                      handleRenameDashboard(new Event('submit') as any);
-                    } else {
-                      setEditingDashboardId(null);
-                      setEditingDashboardName("");
-                    }
-                  }}
-                  data-testid={`input-rename-dashboard-${dashboard.id}`}
-                />
-              </form>
-            ) : (
-              <div
-                key={dashboard.id}
-                className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-all group relative flex items-center gap-1 cursor-pointer",
-                  currentDashboardId === dashboard.id
-                    ? theme === "dark"
-                      ? "bg-slate-800 text-white"
-                      : "bg-white text-slate-900 shadow-sm"
-                    : theme === "dark"
-                      ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-                )}
-                onClick={() => setCurrentDashboardId(dashboard.id)}
-                data-testid={`tab-dashboard-${dashboard.id}`}
-              >
-                <span className="flex-1">{dashboard.name}</span>
-                {currentDashboardId === dashboard.id && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        onClick={(e) => e.stopPropagation()}
-                        className={cn(
-                          "inline-flex items-center justify-center w-6 h-6 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors",
-                          theme === "dark" ? "text-slate-400" : "text-slate-500"
-                        )}
-                        data-testid={`button-dashboard-menu-${dashboard.id}`}
-                        title="Dashboard menu"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          startEditingDashboard(dashboard.id, dashboard.name);
-                        }}
-                        data-testid={`menu-rename-dashboard-${dashboard.id}`}
-                      >
-                        <Edit2 className="w-4 h-4 mr-2" />
-                        Rename Dashboard
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <DropdownMenuItem
-                            onSelect={(e) => e.preventDefault()}
-                            className="text-red-600 focus:text-red-600"
-                            data-testid={`menu-delete-dashboard-${dashboard.id}`}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete Dashboard
-                          </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Dashboard?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete "{dashboard.name}"? All tasks and columns in this dashboard will be permanently deleted. This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel data-testid="button-cancel-delete-dashboard">Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deleteDashboardMutation.mutate(dashboard.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                              data-testid="button-confirm-delete-dashboard"
-                            >
-                              Delete Dashboard
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
+          <div className="max-w-[1800px] mx-auto flex items-center gap-4">
+            {/* Project List */}
+            <div className="flex items-center gap-1 flex-1 overflow-x-auto no-scrollbar py-1">
+              <div className="flex items-center gap-2 mr-4 text-slate-400 dark:text-slate-500 font-semibold text-xs tracking-wider uppercase pl-1">
+                <Layout className="w-3.5 h-3.5" />
+                <span>Projects</span>
               </div>
-            )
-          ))}
-          {showDashboardInput ? (
-            <form onSubmit={handleCreateDashboard} className="flex items-center gap-2">
-              <Input
-                value={newDashboardName}
-                onChange={(e) => setNewDashboardName(e.target.value)}
-                placeholder="Dashboard name"
-                className="h-8 w-40"
-                autoFocus
-                data-testid="input-new-dashboard"
-              />
-              <Button type="submit" size="sm" className="h-8" data-testid="button-create-dashboard">
-                Add
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8"
-                onClick={() => {
-                  setShowDashboardInput(false);
-                  setNewDashboardName("");
-                }}
-              >
-                Cancel
-              </Button>
-            </form>
-          ) : (
-            <button
-              onClick={() => setShowDashboardInput(true)}
-              className={cn(
-                "px-3 py-2 rounded-t-lg text-sm font-medium transition-all",
-                theme === "dark"
-                  ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/50"
-              )}
-              data-testid="button-add-dashboard"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Board */}
-      <main className="max-w-[1800px] mx-auto p-6 overflow-x-auto">
-        <div className="flex gap-6 min-w-[1200px]">
-          {columns.map((column) => {
-            // Use column name directly, fallback to statusConfig for icon only
-            const columnTasks = tasks.filter(t => t.status === column.name);
-            const defaultConfig = statusConfig[column.name as Status];
-            const Icon = defaultConfig?.icon || SlidersHorizontal;
-            
-            return (
-              <div 
-                key={column.id} 
-                className="flex-1 min-w-[300px] flex flex-col h-full"
-              >
-                {/* Column Header */}
-                <div className={cn(
-                  "flex items-center justify-between mb-4 p-3 rounded-xl border",
-                  theme === "light" && "bg-white border-slate-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)]",
-                  theme === "dark" && "bg-slate-800/90 border-slate-700/80 shadow-[0_4px_16px_rgba(0,0,0,0.15)]"
-                )}>
-                  <div className="flex items-center gap-2">
-                    <div className={cn("p-1.5 rounded-md")} style={{ backgroundColor: column.color }}>
-                      <Icon className={cn("w-4 h-4", defaultConfig?.color || "text-slate-600")} />
-                    </div>
-                    <h2 className={cn(
-                      "font-semibold text-sm capitalize",
-                      theme === "dark" ? "text-slate-200" : "text-slate-700"
-                    )}>{column.name}</h2>
-                    <span className={cn(
-                      "text-xs font-medium px-2 py-0.5 rounded-full",
-                      theme === "dark" ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500"
-                    )}>
-                      {columnTasks.length}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Column Content */}
-                <DroppableColumn
-                  id={column.name}
-                  className={cn(
-                    "flex-1 rounded-xl p-3 border flex flex-col gap-3 min-h-[500px] transition-all",
-                    // Light theme
-                    theme === "light" && "bg-slate-50/80 border-slate-200/80 shadow-[0_8px_24px_rgba(0,0,0,0.06)]",
-                    // Dark theme
-                    theme === "dark" && "bg-slate-800/40 backdrop-blur-sm border-slate-700/70 shadow-[0_12px_32px_rgba(0,0,0,0.2)]"
-                  )}
-                  style={{ backgroundColor: theme === "light" ? column.color + "20" : undefined }}
-                  data-testid={`column-${column.name}`}
-                >
-                  <SortableContext items={columnTasks.map(t => t.id.toString())} strategy={verticalListSortingStrategy}>
-                    <AnimatePresence mode="popLayout">
-                      {columnTasks.map((task) => (
-                        <DraggableTask
-                          key={task.id} 
-                          task={task} 
-                          onUpdate={handleUpdateTask}
-                          onDelete={(taskId) => deleteTaskMutation.mutate(taskId)}
-                          unreadCount={unreadCounts[task.id] || 0}
-                          repelMode={repelMode}
-                          mousePixelPosition={mousePixelPosition}
-                          trackingFields={currentDashboard?.trackingFields}
-                          trackingLabels={currentDashboard?.trackingLabels ? (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : undefined}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </SortableContext>
-                  
-                  {columnTasks.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-32 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg mx-2 my-4">
-                      <p className="text-xs font-medium">No tasks</p>
-                    </div>
-                  )}
-                  
-                  <Dialog open={isAddTaskOpen && newTaskStatus === column.name} onOpenChange={(open) => {
-                    if (!open) setIsAddTaskOpen(false);
-                  }}>
-                    <DialogTrigger asChild>
-                      <button 
-                        onClick={() => {
-                          setNewTaskStatus(column.name as Status);
-                          setIsAddTaskOpen(true);
-                        }}
-                        className="mt-auto flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-white/50 rounded-lg transition-all border border-transparent hover:border-slate-200/50 group"
-                        data-testid={`button-add-task-${column.name}`}
-                      >
-                        <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        Add Task
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px]">
-                      <DialogHeader>
-                        <DialogTitle>Create New Task</DialogTitle>
-                        <DialogDescription>
-                          Add a new task to {column.name}
-                        </DialogDescription>
-                      </DialogHeader>
-                      <form onSubmit={handleCreateTask} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="title">Title</Label>
-                          <Input
-                            id="title"
-                            value={newTaskTitle}
-                            onChange={(e) => setNewTaskTitle(e.target.value)}
-                            placeholder="Enter task title..."
-                            data-testid="input-task-title"
-                            autoFocus
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="description">Description</Label>
-                          <Textarea
-                            id="description"
-                            value={newTaskDescription}
-                            onChange={(e) => setNewTaskDescription(e.target.value)}
-                            placeholder="Enter task description..."
-                            rows={4}
-                            data-testid="input-task-description"
-                          />
-                        </div>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setIsAddTaskOpen(false)}
-                            data-testid="button-cancel-task"
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            type="submit"
-                            disabled={!newTaskTitle.trim()}
-                            data-testid="button-create-task"
-                          >
-                            Create Task
-                          </Button>
-                        </div>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
-                </DroppableColumn>
-              </div>
-            );
-          })}
-        </div>
-      </main>
-
-      {/* Column Settings Dialog */}
-      <Dialog open={isColumnSettingsOpen} onOpenChange={setIsColumnSettingsOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Manage Workflow Columns</DialogTitle>
-            <DialogDescription>
-              Add, edit, delete, and reorder columns for this dashboard
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-3 my-4">
-            {columns.map((column, index) => (
-              <div key={column.id} className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                {editingColumnId === column.id ? (
-                  <>
+              {dashboards.map(dashboard => (
+                editingDashboardId === dashboard.id ? (
+                  <form key={dashboard.id} onSubmit={handleRenameDashboard} className="flex items-center gap-2">
                     <Input
-                      value={editingColumnName}
-                      onChange={(e) => setEditingColumnName(e.target.value)}
-                      className="h-9 flex-1"
-                      placeholder="Column name"
-                      data-testid={`input-column-name-${column.id}`}
-                    />
-                    <Input
-                      type="color"
-                      value={editingColumnColor}
-                      onChange={(e) => setEditingColumnColor(e.target.value)}
-                      className="h-9 w-20"
-                      data-testid={`input-column-color-${column.id}`}
-                    />
-                    <Button
-                      size="sm"
-                      onClick={() => handleUpdateColumn(column.id)}
-                      data-testid={`button-save-column-${column.id}`}
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setEditingColumnId(null);
-                        setEditingColumnName("");
-                        setEditingColumnColor("");
+                      value={editingDashboardName}
+                      onChange={(e) => setEditingDashboardName(e.target.value)}
+                      className="h-8 w-32"
+                      autoFocus
+                      onBlur={() => {
+                        if (editingDashboardName.trim()) {
+                          handleRenameDashboard(new Event('submit') as any);
+                        } else {
+                          setEditingDashboardId(null);
+                          setEditingDashboardName("");
+                        }
                       }}
-                      data-testid={`button-cancel-column-${column.id}`}
-                    >
-                      Cancel
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <div
-                      className="w-6 h-6 rounded"
-                      style={{ backgroundColor: column.color }}
                     />
-                    <span className="flex-1 font-medium capitalize">{column.name}</span>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={() => handleMoveColumn(column.id, 'up')}
-                        disabled={index === 0}
-                        data-testid={`button-move-up-${column.id}`}
-                      >
-                        <ChevronUp className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={() => handleMoveColumn(column.id, 'down')}
-                        disabled={index === columns.length - 1}
-                        data-testid={`button-move-down-${column.id}`}
-                      >
-                        <ChevronDown className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={() => {
-                          setEditingColumnId(column.id);
-                          setEditingColumnName(column.name);
-                          setEditingColumnColor(column.color);
-                        }}
-                        data-testid={`button-edit-column-${column.id}`}
-                      >
-                        <Settings className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => handleDeleteColumn(column.id, column.name)}
-                        data-testid={`button-delete-column-${column.id}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
+                  </form>
+                ) : (
+                  <div
+                    key={dashboard.id}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-sm font-medium transition-all group relative flex items-center gap-1 cursor-pointer whitespace-nowrap",
+                      currentDashboardId === dashboard.id
+                        ? theme === "dark"
+                          ? "bg-slate-800 text-white shadow-sm"
+                          : "bg-slate-100 text-slate-900 shadow-sm"
+                        : theme === "dark"
+                          ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
+                    )}
+                    onClick={() => setCurrentDashboardId(dashboard.id)}
+                  >
+                    <span>{dashboard.name}</span>
+                    {currentDashboardId === dashboard.id && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center justify-center w-5 h-5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <MoreVertical className="w-3 h-3" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); startEditingDashboard(dashboard.id, dashboard.name); }}>
+                            <Edit2 className="w-4 h-4 mr-2" /> Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-600">
+                                <Trash2 className="w-4 h-4 mr-2" /> Delete
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Dashboard?</AlertDialogTitle>
+                                <AlertDialogDescription>Are you sure? All tasks and columns in "{dashboard.name}" will be permanently deleted.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteDashboardMutation.mutate(dashboard.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                )
+              ))}
 
-          <form onSubmit={handleCreateColumn} className="flex items-center gap-2 p-3 bg-slate-100 rounded-lg border-2 border-dashed border-slate-300">
-            <Input
-              value={newColumnName}
-              onChange={(e) => setNewColumnName(e.target.value)}
-              className="h-9 flex-1 bg-white"
-              placeholder="New column name"
-              data-testid="input-new-column-name"
-            />
-            <Input
-              type="color"
-              value={newColumnColor}
-              onChange={(e) => setNewColumnColor(e.target.value)}
-              className="h-9 w-20 bg-white"
-              data-testid="input-new-column-color"
-            />
-            <Button
-              type="submit"
-              size="sm"
-              disabled={!newColumnName.trim()}
-              data-testid="button-create-column"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Add Column
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Tracking Settings Dialog */}
-      <Dialog open={isTrackingSettingsOpen} onOpenChange={setIsTrackingSettingsOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Manage Tracking Checkboxes</DialogTitle>
-            <DialogDescription>
-              Choose which checkboxes to show and customize their names
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-3 my-4">
-            {[
-              { key: 'delivered', defaultLabel: 'Delivered' },
-              { key: 'invoiced', defaultLabel: 'Deposit Paid' },
-              { key: 'paid', defaultLabel: 'Fully Paid' },
-              { key: 'distributed', defaultLabel: 'Distributed' },
-            ].map(({ key, defaultLabel }) => {
-              const isEnabled = currentDashboard?.trackingFields?.includes(key) ?? true;
-              const trackingLabels = currentDashboard?.trackingLabels ? 
-                (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : {};
-              const customLabel = trackingLabels[key] || '';
-              return (
-                <div key={key} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <Checkbox
-                    id={`tracking-setting-${key}`}
-                    checked={isEnabled}
-                    onCheckedChange={(checked) => {
-                      if (!currentDashboard) return;
-                      let newFields: string[];
-                      if (checked) {
-                        newFields = [...(currentDashboard.trackingFields || []), key];
-                      } else {
-                        newFields = (currentDashboard.trackingFields || []).filter(f => f !== key);
-                      }
-                      updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingFields: newFields } });
-                    }}
-                    className="h-5 w-5"
-                    data-testid={`checkbox-tracking-${key}`}
-                  />
+              {showDashboardInput ? (
+                <form onSubmit={handleCreateDashboard} className="flex items-center gap-2">
                   <Input
-                    value={customLabel}
-                    onChange={(e) => {
-                      if (!currentDashboard) return;
-                      const currentLabels = currentDashboard.trackingLabels ? 
-                        (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : {};
-                      const newLabels = { ...currentLabels, [key]: e.target.value };
-                      updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingLabels: JSON.stringify(newLabels) } });
-                    }}
-                    placeholder={defaultLabel}
-                    className="flex-1 h-8 bg-white"
-                    data-testid={`input-tracking-label-${key}`}
+                    value={newDashboardName}
+                    onChange={(e) => setNewDashboardName(e.target.value)}
+                    placeholder="New..."
+                    className="h-8 w-24"
+                    autoFocus
                   />
+                </form>
+              ) : (
+                <button
+                  onClick={() => setShowDashboardInput(true)}
+                  className={cn(
+                    "p-1.5 rounded-lg transition-all",
+                    theme === "dark" ? "text-slate-500 hover:text-slate-300" : "text-slate-400 hover:text-slate-600"
+                  )}
+                  title="New Dashboard"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-1.5 ml-auto">
+              <Link href="/pending-payouts">
+                <button
+                  className={cn(
+                    "p-2 rounded-lg transition-all flex items-center gap-2 text-sm font-medium",
+                    theme === "dark" ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                  )}
+                  title="Payouts"
+                >
+                  <DollarSign className="w-4 h-4" />
+                  <span className="hidden lg:inline">Payouts</span>
+                </button>
+              </Link>
+
+              <button
+                onClick={cycleLayoutMode}
+                className={cn(
+                  "p-2 rounded-lg transition-all flex items-center gap-2 text-sm font-medium",
+                  theme === "dark" ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                )}
+                title="Change Layout"
+              >
+                {!plainLayout ? <Mountain className="w-4 h-4" /> : theme === "light" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                <span className="hidden lg:inline">Layout</span>
+              </button>
+
+              <button
+                onClick={toggleRepelMode}
+                className={cn(
+                  "p-2 rounded-lg transition-all flex items-center gap-2 text-sm font-medium",
+                  repelMode
+                    ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400"
+                    : theme === "dark" ? "text-slate-400 hover:bg-slate-800" : "text-slate-500 hover:bg-slate-100"
+                )}
+                title="Repel Mode"
+              >
+                <Zap className="w-4 h-4" />
+                <span className="hidden lg:inline">Interactivity</span>
+              </button>
+
+              <button
+                onClick={() => setIsColumnSettingsOpen(true)}
+                className={cn(
+                  "p-2 rounded-lg transition-all flex items-center gap-2 text-sm font-medium",
+                  theme === "dark" ? "text-slate-400 hover:bg-slate-800" : "text-slate-500 hover:bg-slate-100"
+                )}
+                title="Settings"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="hidden lg:inline">Settings</span>
+              </button>
+
+              <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1" />
+              <UserAvatar />
+            </div>
+          </div>
+        </header>
+
+
+        {/* Board */}
+        <main className="max-w-[1800px] mx-auto p-6 overflow-x-auto">
+          <div className="flex gap-6 min-w-[1200px]">
+            {columns.map((column) => {
+              // Use column name directly, fallback to statusConfig for icon only
+              const columnTasks = tasks.filter(t => t.status === column.name);
+              const defaultConfig = statusConfig[column.name as Status];
+              const Icon = defaultConfig?.icon || SlidersHorizontal;
+
+              return (
+                <div
+                  key={column.id}
+                  className="flex-1 min-w-[300px] flex flex-col h-full"
+                >
+                  {/* Column Header */}
+                  <div className={cn(
+                    "flex items-center justify-between mb-4 p-3 rounded-xl border",
+                    theme === "light" && "bg-white border-slate-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)]",
+                    theme === "dark" && "bg-slate-800/90 border-slate-700/80 shadow-[0_4px_16px_rgba(0,0,0,0.15)]"
+                  )}>
+                    <div className="flex items-center gap-2">
+                      <div className={cn("p-1.5 rounded-md")} style={{ backgroundColor: column.color }}>
+                        <Icon className={cn("w-4 h-4", defaultConfig?.color || "text-slate-600")} />
+                      </div>
+                      <h2 className={cn(
+                        "font-semibold text-sm capitalize",
+                        theme === "dark" ? "text-slate-200" : "text-slate-700"
+                      )}>{column.name}</h2>
+                      <span className={cn(
+                        "text-xs font-medium px-2 py-0.5 rounded-full",
+                        theme === "dark" ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500"
+                      )}>
+                        {columnTasks.length}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Column Content */}
+                  <DroppableColumn
+                    id={column.name}
+                    className={cn(
+                      "flex-1 rounded-xl p-3 border flex flex-col gap-3 min-h-[500px] transition-all",
+                      // Light theme
+                      theme === "light" && "bg-slate-50/80 border-slate-200/80 shadow-[0_8px_24px_rgba(0,0,0,0.06)]",
+                      // Dark theme
+                      theme === "dark" && "bg-slate-800/40 backdrop-blur-sm border-slate-700/70 shadow-[0_12px_32px_rgba(0,0,0,0.2)]"
+                    )}
+                    style={{ backgroundColor: theme === "light" ? column.color + "20" : undefined }}
+                    data-testid={`column-${column.name}`}
+                  >
+                    <SortableContext items={columnTasks.map(t => t.id.toString())} strategy={verticalListSortingStrategy}>
+                      <AnimatePresence mode="popLayout">
+                        {columnTasks.map((task) => (
+                          <DraggableTask
+                            key={task.id}
+                            task={task}
+                            onUpdate={handleUpdateTask}
+                            onDelete={(taskId) => deleteTaskMutation.mutate(taskId)}
+                            unreadCount={unreadCounts[task.id] || 0}
+                            repelMode={repelMode}
+                            mousePixelPosition={mousePixelPosition}
+                            trackingFields={currentDashboard?.trackingFields}
+                            trackingLabels={currentDashboard?.trackingLabels ? (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : undefined}
+                          />
+                        ))}
+                      </AnimatePresence>
+                    </SortableContext>
+
+                    {columnTasks.length === 0 && (
+                      <div className="flex flex-col items-center justify-center h-32 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg mx-2 my-4">
+                        <p className="text-xs font-medium">No tasks</p>
+                      </div>
+                    )}
+
+                    <Dialog open={isAddTaskOpen && newTaskStatus === column.name} onOpenChange={(open) => {
+                      if (!open) setIsAddTaskOpen(false);
+                    }}>
+                      <DialogTrigger asChild>
+                        <button
+                          onClick={() => {
+                            setNewTaskStatus(column.name as Status);
+                            setIsAddTaskOpen(true);
+                          }}
+                          className="mt-auto flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-white/50 rounded-lg transition-all border border-transparent hover:border-slate-200/50 group"
+                          data-testid={`button-add-task-${column.name}`}
+                        >
+                          <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                          Add Task
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[500px]">
+                        <DialogHeader>
+                          <DialogTitle>Create New Task</DialogTitle>
+                          <DialogDescription>
+                            Add a new task to {column.name}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleCreateTask} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="title">Title</Label>
+                            <Input
+                              id="title"
+                              value={newTaskTitle}
+                              onChange={(e) => setNewTaskTitle(e.target.value)}
+                              placeholder="Enter task title..."
+                              data-testid="input-task-title"
+                              autoFocus
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea
+                              id="description"
+                              value={newTaskDescription}
+                              onChange={(e) => setNewTaskDescription(e.target.value)}
+                              placeholder="Enter task description..."
+                              rows={4}
+                              data-testid="input-task-description"
+                            />
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setIsAddTaskOpen(false)}
+                              data-testid="button-cancel-task"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="submit"
+                              disabled={!newTaskTitle.trim()}
+                              data-testid="button-create-task"
+                            >
+                              Create Task
+                            </Button>
+                          </div>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                  </DroppableColumn>
                 </div>
               );
             })}
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </main>
+
+        {/* Column Settings Dialog */}
+        <Dialog open={isColumnSettingsOpen} onOpenChange={setIsColumnSettingsOpen}>
+          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Manage Workflow Columns</DialogTitle>
+              <DialogDescription>
+                Add, edit, delete, and reorder columns for this dashboard
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 my-4">
+              {columns.map((column, index) => (
+                <div key={column.id} className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  {editingColumnId === column.id ? (
+                    <>
+                      <Input
+                        value={editingColumnName}
+                        onChange={(e) => setEditingColumnName(e.target.value)}
+                        className="h-9 flex-1"
+                        placeholder="Column name"
+                        data-testid={`input-column-name-${column.id}`}
+                      />
+                      <Input
+                        type="color"
+                        value={editingColumnColor}
+                        onChange={(e) => setEditingColumnColor(e.target.value)}
+                        className="h-9 w-20"
+                        data-testid={`input-column-color-${column.id}`}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleUpdateColumn(column.id)}
+                        data-testid={`button-save-column-${column.id}`}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingColumnId(null);
+                          setEditingColumnName("");
+                          setEditingColumnColor("");
+                        }}
+                        data-testid={`button-cancel-column-${column.id}`}
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <div
+                        className="w-6 h-6 rounded"
+                        style={{ backgroundColor: column.color }}
+                      />
+                      <span className="flex-1 font-medium capitalize">{column.name}</span>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => handleMoveColumn(column.id, 'up')}
+                          disabled={index === 0}
+                          data-testid={`button-move-up-${column.id}`}
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => handleMoveColumn(column.id, 'down')}
+                          disabled={index === columns.length - 1}
+                          data-testid={`button-move-down-${column.id}`}
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            setEditingColumnId(column.id);
+                            setEditingColumnName(column.name);
+                            setEditingColumnColor(column.color);
+                          }}
+                          data-testid={`button-edit-column-${column.id}`}
+                        >
+                          <Settings className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+                          onClick={() => handleDeleteColumn(column.id, column.name)}
+                          data-testid={`button-delete-column-${column.id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={handleCreateColumn} className="flex items-center gap-2 p-3 bg-slate-100 rounded-lg border-2 border-dashed border-slate-300">
+              <Input
+                value={newColumnName}
+                onChange={(e) => setNewColumnName(e.target.value)}
+                className="h-9 flex-1 bg-white"
+                placeholder="New column name"
+                data-testid="input-new-column-name"
+              />
+              <Input
+                type="color"
+                value={newColumnColor}
+                onChange={(e) => setNewColumnColor(e.target.value)}
+                className="h-9 w-20 bg-white"
+                data-testid="input-new-column-color"
+              />
+              <Button
+                type="submit"
+                size="sm"
+                disabled={!newColumnName.trim()}
+                data-testid="button-create-column"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Add Column
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Tracking Settings Dialog */}
+        <Dialog open={isTrackingSettingsOpen} onOpenChange={setIsTrackingSettingsOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Manage Tracking Checkboxes</DialogTitle>
+              <DialogDescription>
+                Choose which checkboxes to show and customize their names
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 my-4">
+              {[
+                { key: 'delivered', defaultLabel: 'Delivered' },
+                { key: 'invoiced', defaultLabel: 'Deposit Paid' },
+                { key: 'paid', defaultLabel: 'Fully Paid' },
+                { key: 'distributed', defaultLabel: 'Distributed' },
+              ].map(({ key, defaultLabel }) => {
+                const isEnabled = currentDashboard?.trackingFields?.includes(key) ?? true;
+                const trackingLabels = currentDashboard?.trackingLabels ?
+                  (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : {};
+                const customLabel = trackingLabels[key] || '';
+                return (
+                  <div key={key} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <Checkbox
+                      id={`tracking-setting-${key}`}
+                      checked={isEnabled}
+                      onCheckedChange={(checked) => {
+                        if (!currentDashboard) return;
+                        let newFields: string[];
+                        if (checked) {
+                          newFields = [...(currentDashboard.trackingFields || []), key];
+                        } else {
+                          newFields = (currentDashboard.trackingFields || []).filter(f => f !== key);
+                        }
+                        updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingFields: newFields } });
+                      }}
+                      className="h-5 w-5"
+                      data-testid={`checkbox-tracking-${key}`}
+                    />
+                    <Input
+                      value={customLabel}
+                      onChange={(e) => {
+                        if (!currentDashboard) return;
+                        const currentLabels = currentDashboard.trackingLabels ?
+                          (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : {};
+                        const newLabels = { ...currentLabels, [key]: e.target.value };
+                        updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingLabels: JSON.stringify(newLabels) } });
+                      }}
+                      placeholder={defaultLabel}
+                      className="flex-1 h-8 bg-white"
+                      data-testid={`input-tracking-label-${key}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </DndContext>
   );
 }
