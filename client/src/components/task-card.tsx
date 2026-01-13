@@ -1,6 +1,6 @@
 import { type Task, type TaskTracking, type Comment, statusConfig } from "@/lib/types";
 import type { Subtask, Payout, Payee, InsertPayee } from "@shared/schema";
-import { MoreHorizontal, User, CheckCircle2, MessageSquare, Send, Bell, ListTodo, X, Plus, DollarSign, Trash2, GripVertical, Calendar, AlertCircle } from "lucide-react";
+import { MoreHorizontal, User, CheckCircle2, MessageSquare, Send, Bell, ListTodo, X, Plus, DollarSign, Trash2, GripVertical, Calendar, AlertCircle, FileText } from "lucide-react";
 import { format, isPast, isToday } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -235,7 +235,15 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
   const totalPaid = payoutData?.payees.reduce((sum, p) => sum + p.amount, 0) || 0;
   const remaining = (payoutData?.totalAmount || 0) - totalPaid;
 
-  const StatusIcon = statusConfig[task.status].icon;
+  // Get status config with fallback for custom columns
+  const currentStatusConfig = statusConfig[task.status as keyof typeof statusConfig] || {
+    label: task.status,
+    icon: FileText,
+    color: "text-slate-500",
+    bg: "bg-slate-100/50",
+    borderColor: "border-slate-200"
+  };
+  const StatusIcon = currentStatusConfig.icon;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
