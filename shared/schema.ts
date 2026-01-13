@@ -68,6 +68,7 @@ export const payees = pgTable("payees", {
 export const dashboards = pgTable("dashboards", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  trackingFields: text("tracking_fields").array().notNull().default(sql`ARRAY['delivered', 'invoiced', 'paid', 'distributed']::text[]`),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
