@@ -42,6 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 function UserAvatar() {
   const { currentUser, logout } = useUser();
@@ -70,7 +71,7 @@ function UserAvatar() {
   );
 }
 
-function DraggableTask({ task, unreadCount, onUpdate, onDelete, repelMode, mousePixelPosition }: { task: Task; unreadCount: number; onUpdate: (task: Task) => void; onDelete: (taskId: number) => void; repelMode?: boolean; mousePixelPosition?: { x: number; y: number } }) {
+function DraggableTask({ task, unreadCount, onUpdate, onDelete, repelMode, mousePixelPosition, trackingFields }: { task: Task; unreadCount: number; onUpdate: (task: Task) => void; onDelete: (taskId: number) => void; repelMode?: boolean; mousePixelPosition?: { x: number; y: number }; trackingFields?: string[] }) {
   const {
     attributes,
     listeners,
@@ -134,6 +135,7 @@ function DraggableTask({ task, unreadCount, onUpdate, onDelete, repelMode, mouse
         onDelete={onDelete}
         unreadCount={unreadCount}
         dragHandleProps={listeners}
+        trackingFields={trackingFields}
       />
     </div>
   );
@@ -879,6 +881,7 @@ export default function Home() {
                           unreadCount={unreadCounts[task.id] || 0}
                           repelMode={repelMode}
                           mousePixelPosition={mousePixelPosition}
+                          trackingFields={currentDashboard?.trackingFields}
                         />
                       ))}
                     </AnimatePresence>
@@ -1103,59 +1106,43 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle>Manage Tracking Checkboxes</DialogTitle>
             <DialogDescription>
-              Customize the checkboxes shown on task cards for this dashboard
+              Choose which checkboxes to show on task cards for this dashboard
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-3 my-4">
-            {currentDashboard?.trackingFields?.map((field, index) => (
-              <div key={index} className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <CheckSquare className="w-4 h-4 text-slate-500" />
-                <span className="flex-1 font-medium capitalize">{field.replace(/_/g, ' ')}</span>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
-                  onClick={() => {
-                    if (!currentDashboard) return;
-                    const newFields = currentDashboard.trackingFields.filter((_, i) => i !== index);
-                    updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingFields: newFields } });
-                  }}
-                  data-testid={`button-delete-tracking-${index}`}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            ))}
+            {[
+              { key: 'delivered', label: 'Delivered' },
+              { key: 'invoiced', label: 'Deposit Paid' },
+              { key: 'paid', label: 'Fully Paid' },
+              { key: 'distributed', label: 'Distributed' },
+            ].map(({ key, label }) => {
+              const isEnabled = currentDashboard?.trackingFields?.includes(key) ?? true;
+              return (
+                <div key={key} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <Checkbox
+                    id={`tracking-setting-${key}`}
+                    checked={isEnabled}
+                    onCheckedChange={(checked) => {
+                      if (!currentDashboard) return;
+                      let newFields: string[];
+                      if (checked) {
+                        newFields = [...(currentDashboard.trackingFields || []), key];
+                      } else {
+                        newFields = (currentDashboard.trackingFields || []).filter(f => f !== key);
+                      }
+                      updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingFields: newFields } });
+                    }}
+                    className="h-5 w-5"
+                    data-testid={`checkbox-tracking-${key}`}
+                  />
+                  <Label htmlFor={`tracking-setting-${key}`} className="flex-1 font-medium cursor-pointer">
+                    {label}
+                  </Label>
+                </div>
+              );
+            })}
           </div>
-
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!newTrackingField.trim() || !currentDashboard) return;
-              const newFields = [...(currentDashboard.trackingFields || []), newTrackingField.trim()];
-              updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingFields: newFields } });
-              setNewTrackingField("");
-            }} 
-            className="flex items-center gap-2 p-3 bg-slate-100 rounded-lg border-2 border-dashed border-slate-300"
-          >
-            <Input
-              value={newTrackingField}
-              onChange={(e) => setNewTrackingField(e.target.value)}
-              className="h-9 flex-1 bg-white"
-              placeholder="New checkbox label (e.g., Deposit Paid)"
-              data-testid="input-new-tracking-field"
-            />
-            <Button
-              type="submit"
-              size="sm"
-              disabled={!newTrackingField.trim()}
-              data-testid="button-create-tracking-field"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Add
-            </Button>
-          </form>
         </DialogContent>
       </Dialog>
     </div>

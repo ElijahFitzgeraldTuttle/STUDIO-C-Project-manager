@@ -38,6 +38,7 @@ interface TaskCardProps {
   onDelete: (taskId: number) => void;
   unreadCount?: number;
   dragHandleProps?: any;
+  trackingFields?: string[];
 }
 
 const trackingLabels: Record<string, string> = {
@@ -47,7 +48,9 @@ const trackingLabels: Record<string, string> = {
   distributed: "Distributed",
 };
 
-export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandleProps }: TaskCardProps) {
+const defaultTrackingFields = ["delivered", "invoiced", "paid", "distributed"];
+
+export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandleProps, trackingFields = defaultTrackingFields }: TaskCardProps) {
   const [newComment, setNewComment] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
@@ -400,31 +403,34 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
             )}
             onClick={(e) => e.stopPropagation()}
           >
-            {Object.entries(task.tracking).map(([key, value]) => (
-              <div key={key} className="flex items-center gap-2 hover:bg-white/50 p-1.5 rounded transition-colors">
-                <Checkbox 
-                  id={`tracking-${task.id}-${key}`} 
-                  checked={value}
-                  onCheckedChange={(checked) => handleTrackingChange(key as keyof TaskTracking, checked === true)}
-                  className={cn(
-                    "h-5 w-5 rounded-md border-2 transition-all",
-                    theme === "dark" 
-                      ? "border-slate-500 data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500" 
-                      : "border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600",
-                    "hover:border-indigo-400 data-[state=checked]:shadow-md data-[state=checked]:shadow-indigo-500/30"
-                  )}
-                />
-                <Label 
-                  htmlFor={`tracking-${task.id}-${key}`}
-                  className={cn(
-                    "text-xs cursor-pointer font-semibold",
-                    theme === "dark" ? "text-slate-300" : "text-slate-600"
-                  )}
-                >
-                  {trackingLabels[key] || key}
-                </Label>
-              </div>
-            ))}
+            {trackingFields.map((key) => {
+              const value = task.tracking[key as keyof TaskTracking] ?? false;
+              return (
+                <div key={key} className="flex items-center gap-2 hover:bg-white/50 p-1.5 rounded transition-colors">
+                  <Checkbox 
+                    id={`tracking-${task.id}-${key}`} 
+                    checked={value}
+                    onCheckedChange={(checked) => handleTrackingChange(key as keyof TaskTracking, checked === true)}
+                    className={cn(
+                      "h-5 w-5 rounded-md border-2 transition-all",
+                      theme === "dark" 
+                        ? "border-slate-500 data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500" 
+                        : "border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600",
+                      "hover:border-indigo-400 data-[state=checked]:shadow-md data-[state=checked]:shadow-indigo-500/30"
+                    )}
+                  />
+                  <Label 
+                    htmlFor={`tracking-${task.id}-${key}`}
+                    className={cn(
+                      "text-xs cursor-pointer font-semibold",
+                      theme === "dark" ? "text-slate-300" : "text-slate-600"
+                    )}
+                  >
+                    {trackingLabels[key] || key}
+                  </Label>
+                </div>
+              );
+            })}
           </div>
 
           <div className="flex items-center justify-between pt-2 mt-auto">
@@ -855,35 +861,38 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                   theme === "light" && "bg-slate-50 border-slate-100",
                   theme === "dark" && "bg-slate-700/30 border-slate-600/50"
                 )}>
-                  {Object.entries(task.tracking).map(([key, value]) => (
-                    <div key={key} className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg transition-all hover:scale-[1.02]",
-                      theme === "light" && "hover:bg-white hover:shadow-sm",
-                      theme === "dark" && "hover:bg-slate-600/30"
-                    )}>
-                      <Checkbox 
-                        id={`modal-tracking-${task.id}-${key}`} 
-                        checked={value}
-                        onCheckedChange={(checked) => handleTrackingChange(key as keyof TaskTracking, checked === true)}
-                        className={cn(
-                          "h-6 w-6 rounded-lg border-2 transition-all",
-                          theme === "dark" 
-                            ? "border-slate-500 data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500" 
-                            : "border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600",
-                          "hover:border-indigo-400 data-[state=checked]:shadow-md data-[state=checked]:shadow-indigo-500/30"
-                        )}
-                      />
-                      <Label 
-                        htmlFor={`modal-tracking-${task.id}-${key}`}
-                        className={cn(
-                          "text-sm cursor-pointer font-medium select-none",
-                          theme === "dark" ? "text-slate-200" : "text-slate-700"
-                        )}
-                      >
-                        {trackingLabels[key] || key}
-                      </Label>
-                    </div>
-                  ))}
+                  {trackingFields.map((key) => {
+                    const value = task.tracking[key as keyof TaskTracking] ?? false;
+                    return (
+                      <div key={key} className={cn(
+                        "flex items-center gap-3 p-3 rounded-lg transition-all hover:scale-[1.02]",
+                        theme === "light" && "hover:bg-white hover:shadow-sm",
+                        theme === "dark" && "hover:bg-slate-600/30"
+                      )}>
+                        <Checkbox 
+                          id={`modal-tracking-${task.id}-${key}`} 
+                          checked={value}
+                          onCheckedChange={(checked) => handleTrackingChange(key as keyof TaskTracking, checked === true)}
+                          className={cn(
+                            "h-6 w-6 rounded-lg border-2 transition-all",
+                            theme === "dark" 
+                              ? "border-slate-500 data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500" 
+                              : "border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600",
+                            "hover:border-indigo-400 data-[state=checked]:shadow-md data-[state=checked]:shadow-indigo-500/30"
+                          )}
+                        />
+                        <Label 
+                          htmlFor={`modal-tracking-${task.id}-${key}`}
+                          className={cn(
+                            "text-sm cursor-pointer font-medium select-none",
+                            theme === "dark" ? "text-slate-200" : "text-slate-700"
+                          )}
+                        >
+                          {trackingLabels[key] || key}
+                        </Label>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
