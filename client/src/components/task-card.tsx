@@ -39,9 +39,10 @@ interface TaskCardProps {
   unreadCount?: number;
   dragHandleProps?: any;
   trackingFields?: string[];
+  trackingLabels?: Record<string, string>;
 }
 
-const trackingLabels: Record<string, string> = {
+const defaultTrackingLabels: Record<string, string> = {
   delivered: "Delivered",
   invoiced: "Deposit Paid",
   paid: "Fully Paid",
@@ -50,7 +51,8 @@ const trackingLabels: Record<string, string> = {
 
 const defaultTrackingFields = ["delivered", "invoiced", "paid", "distributed"];
 
-export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandleProps, trackingFields = defaultTrackingFields }: TaskCardProps) {
+export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandleProps, trackingFields = defaultTrackingFields, trackingLabels }: TaskCardProps) {
+  const effectiveLabels = { ...defaultTrackingLabels, ...trackingLabels };
   const [newComment, setNewComment] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
@@ -434,7 +436,7 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                       theme === "dark" ? "text-slate-300" : "text-slate-600"
                     )}
                   >
-                    {trackingLabels[key] || key}
+                    {effectiveLabels[key] || key}
                   </Label>
                 </div>
               );
@@ -489,15 +491,15 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
           )}>
             <DialogHeader className="mb-6">
               <div className="flex items-center gap-3 mb-2">
-                <div className={cn("p-2 rounded-lg", statusConfig[task.status].bg)}>
-                  <StatusIcon className={cn("w-5 h-5", statusConfig[task.status].color)} />
+                <div className={cn("p-2 rounded-lg", currentStatusConfig.bg)}>
+                  <StatusIcon className={cn("w-5 h-5", currentStatusConfig.color)} />
                 </div>
                 <div className={cn("text-xs font-semibold px-2.5 py-1 rounded-full border", 
-                  statusConfig[task.status].bg, 
-                  theme === "dark" ? "text-white" : statusConfig[task.status].color,
-                  statusConfig[task.status].borderColor
+                  currentStatusConfig.bg, 
+                  theme === "dark" ? "text-white" : currentStatusConfig.color,
+                  currentStatusConfig.borderColor
                 )}>
-                  {statusConfig[task.status].label}
+                  {currentStatusConfig.label}
                 </div>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -896,7 +898,7 @@ export function TaskCard({ task, onUpdate, onDelete, unreadCount = 0, dragHandle
                             theme === "dark" ? "text-slate-200" : "text-slate-700"
                           )}
                         >
-                          {trackingLabels[key] || key}
+                          {effectiveLabels[key] || key}
                         </Label>
                       </div>
                     );

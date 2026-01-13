@@ -69,6 +69,7 @@ export const dashboards = pgTable("dashboards", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   trackingFields: text("tracking_fields").array().notNull().default(sql`ARRAY['delivered', 'invoiced', 'paid', 'distributed']::text[]`),
+  trackingLabels: text("tracking_labels").default('{}'),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

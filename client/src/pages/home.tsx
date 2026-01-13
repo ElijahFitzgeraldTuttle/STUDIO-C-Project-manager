@@ -71,7 +71,7 @@ function UserAvatar() {
   );
 }
 
-function DraggableTask({ task, unreadCount, onUpdate, onDelete, repelMode, mousePixelPosition, trackingFields }: { task: Task; unreadCount: number; onUpdate: (task: Task) => void; onDelete: (taskId: number) => void; repelMode?: boolean; mousePixelPosition?: { x: number; y: number }; trackingFields?: string[] }) {
+function DraggableTask({ task, unreadCount, onUpdate, onDelete, repelMode, mousePixelPosition, trackingFields, trackingLabels }: { task: Task; unreadCount: number; onUpdate: (task: Task) => void; onDelete: (taskId: number) => void; repelMode?: boolean; mousePixelPosition?: { x: number; y: number }; trackingFields?: string[]; trackingLabels?: Record<string, string> }) {
   const {
     attributes,
     listeners,
@@ -136,6 +136,7 @@ function DraggableTask({ task, unreadCount, onUpdate, onDelete, repelMode, mouse
         unreadCount={unreadCount}
         dragHandleProps={listeners}
         trackingFields={trackingFields}
+        trackingLabels={trackingLabels}
       />
     </div>
   );
@@ -882,6 +883,7 @@ export default function Home() {
                           repelMode={repelMode}
                           mousePixelPosition={mousePixelPosition}
                           trackingFields={currentDashboard?.trackingFields}
+                          trackingLabels={currentDashboard?.trackingLabels ? (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : undefined}
                         />
                       ))}
                     </AnimatePresence>
@@ -1106,18 +1108,21 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle>Manage Tracking Checkboxes</DialogTitle>
             <DialogDescription>
-              Choose which checkboxes to show on task cards for this dashboard
+              Choose which checkboxes to show and customize their names
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-3 my-4">
             {[
-              { key: 'delivered', label: 'Delivered' },
-              { key: 'invoiced', label: 'Deposit Paid' },
-              { key: 'paid', label: 'Fully Paid' },
-              { key: 'distributed', label: 'Distributed' },
-            ].map(({ key, label }) => {
+              { key: 'delivered', defaultLabel: 'Delivered' },
+              { key: 'invoiced', defaultLabel: 'Deposit Paid' },
+              { key: 'paid', defaultLabel: 'Fully Paid' },
+              { key: 'distributed', defaultLabel: 'Distributed' },
+            ].map(({ key, defaultLabel }) => {
               const isEnabled = currentDashboard?.trackingFields?.includes(key) ?? true;
+              const trackingLabels = currentDashboard?.trackingLabels ? 
+                (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : {};
+              const customLabel = trackingLabels[key] || '';
               return (
                 <div key={key} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
                   <Checkbox
@@ -1136,9 +1141,19 @@ export default function Home() {
                     className="h-5 w-5"
                     data-testid={`checkbox-tracking-${key}`}
                   />
-                  <Label htmlFor={`tracking-setting-${key}`} className="flex-1 font-medium cursor-pointer">
-                    {label}
-                  </Label>
+                  <Input
+                    value={customLabel}
+                    onChange={(e) => {
+                      if (!currentDashboard) return;
+                      const currentLabels = currentDashboard.trackingLabels ? 
+                        (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : {};
+                      const newLabels = { ...currentLabels, [key]: e.target.value };
+                      updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingLabels: JSON.stringify(newLabels) } });
+                    }}
+                    placeholder={defaultLabel}
+                    className="flex-1 h-8 bg-white"
+                    data-testid={`input-tracking-label-${key}`}
+                  />
                 </div>
               );
             })}
