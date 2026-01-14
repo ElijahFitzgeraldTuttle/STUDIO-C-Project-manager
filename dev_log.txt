@@ -1,0 +1,200 @@
+
+> rest-express@1.0.0 dev
+> tsx server/index-dev.ts
+
+8:12:13 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+8:16:12 PM [express] GET /api/unread-counts 200 in 3ms :: {}
+8:16:12 PM [express] GET /api/dashboards 200 in 0ms :: [{"name":"Studio C Productions","id":1,"creat…
+8:16:12 PM [express] GET /api/tasks 200 in 0ms :: [{"title":"Commercial Shoot - Nike","description":…
+8:16:12 PM [express] GET /api/dashboards/1/columns 200 in 1ms :: [{"dashboardId":1,"name":"prospect"…
+8:16:12 PM [express] GET /api/tasks/2/comments 304 in 0ms :: []
+8:16:12 PM [express] GET /api/tasks/2/subtasks 304 in 0ms :: []
+8:16:12 PM [express] GET /api/tasks/2/payout 304 in 1ms
+8:16:12 PM [express] GET /api/tasks/1/comments 304 in 1ms :: []
+8:16:12 PM [express] GET /api/tasks/1/subtasks 200 in 0ms :: [{"taskId":1,"title":"Confirm crew list…
+8:16:12 PM [express] GET /api/tasks/1/payout 304 in 0ms
+8:16:15 PM [express] GET /api/tasks 200 in 0ms :: [{"title":"Social Media Strategy","description":"D…
+8:16:15 PM [express] GET /api/dashboards/2/columns 200 in 1ms :: [{"dashboardId":2,"name":"prospect"…
+8:16:15 PM [express] GET /api/tasks/3/comments 304 in 1ms :: []
+8:16:15 PM [express] GET /api/tasks/3/subtasks 304 in 1ms :: []
+8:16:15 PM [express] GET /api/tasks/3/payout 304 in 0ms
+8:16:20 PM [express] GET /api/unpaid-payouts 200 in 1ms :: []
+8:16:20 PM [express] GET /api/receivables 200 in 0ms :: []
+[2m8:17:52 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pending-payouts.tsx, /src/index.css[22m
+[2m8:19:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/home.tsx, /src/components/task-card.tsx[22m
+[2m8:20:07 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/pending-payouts.tsx, /src/index.css[22m
+8:21:07 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+[2m8:21:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/pending-payouts.tsx, /src/pages/home.tsx, /src/components/task-card.tsx[22m
+8:21:21 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:21:31 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:21:41 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:21:51 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:22:01 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:23:02 PM [express] GET /api/unpaid-payouts 304 in 0ms :: []
+8:23:02 PM [express] GET /api/receivables 304 in 1ms :: []
+8:23:03 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:23:04 PM [express] GET /api/dashboards 304 in 1ms :: [{"name":"Studio C Productions","id":1,"creat…
+8:23:04 PM [express] GET /api/tasks 304 in 0ms :: [{"title":"Commercial Shoot - Nike","description":…
+8:23:04 PM [express] GET /api/dashboards/1/columns 304 in 0ms :: [{"dashboardId":1,"name":"prospect"…
+8:23:04 PM [express] GET /api/tasks/2/comments 304 in 0ms :: []
+8:23:04 PM [express] GET /api/tasks/2/subtasks 304 in 0ms :: []
+8:23:04 PM [express] GET /api/tasks/2/payout 304 in 0ms
+8:23:04 PM [express] GET /api/tasks/1/comments 304 in 0ms :: []
+8:23:04 PM [express] GET /api/tasks/1/subtasks 304 in 0ms :: [{"taskId":1,"title":"Confirm crew list…
+8:23:04 PM [express] GET /api/tasks/1/payout 304 in 1ms
+8:23:14 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:23:24 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:23:34 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:23:44 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:23:54 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:24:04 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:24:14 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+[2m8:25:03 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/task-card.tsx[22m
+8:25:33 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:25:43 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:25:53 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:26:03 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:26:13 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:26:24 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:26:34 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:26:44 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+[2m8:27:01 PM[22m [36m[1m[vite][22m[39m changed tsconfig file detected: C:/Users/elitu/Downloads/Repos/STUDIO-C-Project-manager/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+8:27:02 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:27:02 PM [express] GET /api/dashboards 304 in 0ms :: [{"name":"Studio C Productions","id":1,"creat…
+8:27:03 PM [express] GET /api/tasks 304 in 0ms :: [{"title":"Commercial Shoot - Nike","description":…
+8:27:03 PM [express] GET /api/dashboards/1/columns 304 in 0ms :: [{"dashboardId":1,"name":"prospect"…
+8:27:03 PM [express] GET /api/tasks/2/comments 304 in 1ms :: []
+8:27:03 PM [express] GET /api/tasks/2/subtasks 304 in 1ms :: []
+8:27:03 PM [express] GET /api/tasks/2/payout 304 in 0ms
+8:27:03 PM [express] GET /api/tasks/1/comments 304 in 0ms :: []
+8:27:03 PM [express] GET /api/tasks/1/subtasks 304 in 0ms :: [{"taskId":1,"title":"Confirm crew list…
+8:27:03 PM [express] GET /api/tasks/1/payout 304 in 1ms
+8:27:42 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:27:52 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:28:03 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:28:13 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:28:16 PM [express] GET /api/tasks 304 in 0ms :: [{"title":"Social Media Strategy","description":"D…
+8:28:16 PM [express] GET /api/dashboards/2/columns 304 in 0ms :: [{"dashboardId":2,"name":"prospect"…
+8:28:16 PM [express] GET /api/tasks/3/comments 304 in 1ms :: []
+8:28:16 PM [express] GET /api/tasks/3/subtasks 304 in 0ms :: []
+8:28:16 PM [express] GET /api/tasks/3/payout 304 in 1ms
+8:28:23 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:28:33 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:28:43 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:28:53 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:29:03 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:29:14 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:29:24 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+[2m8:29:30 PM[22m [36m[1m[vite][22m[39m changed tsconfig file detected: C:/Users/elitu/Downloads/Repos/STUDIO-C-Project-manager/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+8:29:31 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:29:31 PM [express] GET /api/dashboards 304 in 0ms :: [{"name":"Studio C Productions","id":1,"creat…
+8:29:32 PM [express] GET /api/tasks 304 in 1ms :: [{"title":"Commercial Shoot - Nike","description":…
+8:29:32 PM [express] GET /api/dashboards/1/columns 304 in 0ms :: [{"dashboardId":1,"name":"prospect"…
+8:29:32 PM [express] GET /api/tasks/2/comments 304 in 0ms :: []
+8:29:32 PM [express] GET /api/tasks/2/subtasks 304 in 0ms :: []
+8:29:32 PM [express] GET /api/tasks/2/payout 304 in 0ms
+8:29:32 PM [express] GET /api/tasks/1/comments 304 in 0ms :: []
+8:29:32 PM [express] GET /api/tasks/1/subtasks 304 in 0ms :: [{"taskId":1,"title":"Confirm crew list…
+8:29:32 PM [express] GET /api/tasks/1/payout 304 in 0ms
+8:29:41 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:29:51 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:30:01 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+[2m8:30:08 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/home.tsx, /src/index.css[22m
+[2m8:30:19 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/task-card.tsx[22m
+8:30:19 PM [express] GET /api/team-members 200 in 10ms
+8:30:19 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+[2m8:30:22 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/task-card.tsx[22m
+8:30:22 PM [express] GET /api/team-members 200 in 4ms
+[2m8:30:25 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/flappy-bird.tsx[22m
+8:30:29 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:30:40 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+[2m8:30:40 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css[22m
+8:30:40 PM [express] GET /api/team-members 200 in 6ms
+[2m8:30:46 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/home.tsx, /src/index.css[22m
+8:30:57 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:31:07 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:31:17 PM [express] GET /api/unread-counts 304 in 2ms :: {}
+8:31:20 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+8:31:20 PM [express] GET /api/dashboards 304 in 1ms :: [{"name":"Studio C Productions","id":1,"creat…
+8:31:20 PM [express] GET /api/tasks 304 in 1ms :: [{"title":"Commercial Shoot - Nike","description":…
+8:31:20 PM [express] GET /api/dashboards/1/columns 304 in 0ms :: [{"dashboardId":1,"name":"prospect"…
+8:31:20 PM [express] GET /api/tasks/2/comments 304 in 0ms :: []
+8:31:20 PM [express] GET /api/tasks/2/subtasks 304 in 1ms :: []
+8:31:20 PM [express] GET /api/tasks/2/payout 304 in 0ms
+8:31:20 PM [express] GET /api/team-members 200 in 8ms
+8:31:20 PM [express] GET /api/tasks/1/comments 304 in 0ms :: []
+8:31:20 PM [express] GET /api/tasks/1/subtasks 304 in 0ms :: [{"taskId":1,"title":"Confirm crew list…
+8:31:20 PM [express] GET /api/tasks/1/payout 304 in 1ms
+8:31:30 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+8:31:40 PM [express] GET /api/unread-counts 304 in 1ms :: {}
+[2m8:31:45 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/home.tsx, /src/index.css[22m
+8:31:56 PM [express] GET /api/unread-counts 304 in 0ms :: {}
+[2m8:32:09 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/task-card.tsx[22m
+[2m8:32:09 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\client\src\components\task-card.tsx: Expected corresponding JSX closing tag for <div>. (494:8)
+
+[0m [90m 492 |[31m             [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m 493 |[31m           [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 494 |[31m         [33m<[31m[33m/[31m[33mmotion[31m[33m.[31mdiv[33m>[31m
+ [90m     |[31m         [31m[1m^[22m[31m
+ [90m 495 |[31m       [33m<[31m[33m/[31m[33mDialogTrigger[31m[33m>[31m
+ [90m 496 |[31m
+ [90m 497 |[31m       [33m<[31m[33mDialogContent[31m className[33m=[31m{cn([0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/elitu/Downloads/Repos/STUDIO-C-Project-manager/client/src/components/task-card.tsx[39m:494:8
+[33m  504 |            <div className={cn(
+  505 |              "md:col-span-3 p-6 overflow-y-auto border-r",
+  506 |              theme === "dark" ? "border-slate-700" : "border-slate-100"
+      |                                                               ^
+  507 |            )}>
+  508 |              <DialogHeader className="mb-6">[39m
+      at toParseError (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parse-error.ts:95:45)
+      at TypeScriptParserMixin.raise (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\tokenizer\index.ts:1503:19)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\plugins\jsx\index.ts:527:18)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\plugins\jsx\index.ts:483:34)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\plugins\jsx\index.ts:483:34)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\plugins\jsx\index.ts:559:19)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\plugins\jsx\index.ts:573:21)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:734:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:713:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:675:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\plugins\typescript\index.ts:3855:20)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:409:14)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:421:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:376:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:301:21)
+      at fn (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\plugins\typescript\index.ts:3708:23)
+      at TypeScriptParserMixin.tryParse (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\util.ts:174:20)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\plugins\typescript\index.ts:3707:20)
+      at callback (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:257:12)
+      at TypeScriptParserMixin.allowInAnd (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:3192:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:256:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:3306:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:1813:16)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:1162:21)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\plugins\jsx\index.ts:583:22)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:734:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:713:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:675:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\plugins\typescript\index.ts:3855:20)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:409:14)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:421:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:376:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:301:21)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\plugins\typescript\index.ts:3727:22)
+      at TypeScriptParserMixin.parseExpressionBase (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:226:23)
+      at callback (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:217:39)
+      at TypeScriptParserMixin.allowInAnd (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:3187:16)
+      at TypeScriptParserMixin.parseExpression (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:217:17)
+      at TypeScriptParserMixin.parseReturnStatement (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\statement.ts:1110:28)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\statement.ts:538:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\plugins\typescript\index.ts:3185:20)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\statement.ts:477:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\statement.ts:426:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\statement.ts:1439:16)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\statement.ts:1412:10)
+      at TypeScriptParserMixin.parseBlock (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\statement.ts:1380:10)
+      at TypeScriptParserMixin.parseFunctionBody (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:2616:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\expression.ts:2585:10)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\plugins\typescript\index.ts:2646:20)
+      at <anonymous> (C:\Users\elitu\Downloads\Repos\STUDIO-C-Project-manager\node_modules\@babel\parser\src\parser\statement.ts:1690:12)

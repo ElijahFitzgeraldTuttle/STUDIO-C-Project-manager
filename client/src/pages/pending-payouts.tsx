@@ -13,12 +13,12 @@ export default function PendingPayouts() {
   const [plainLayout] = useState(() => {
     return localStorage.getItem("plainLayout") === "true";
   });
-  
+
   const [newClientName, setNewClientName] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
-  
+
   const { data: unpaidPayouts, isLoading: payoutsLoading } = useQuery({
     queryKey: ["unpaid-payouts"],
     queryFn: fetchUnpaidPayouts,
@@ -79,7 +79,7 @@ export default function PendingPayouts() {
       )}>
         {!plainLayout && (
           <div className="fixed inset-0 -z-10 pointer-events-none">
-            <div 
+            <div
               className="w-full h-full bg-cover bg-center"
               style={{ backgroundImage: 'url(/dark-bg-default.png)' }}
             />
@@ -109,7 +109,7 @@ export default function PendingPayouts() {
     )}>
       {!plainLayout && (
         <div className="fixed inset-0 -z-10 pointer-events-none">
-          <div 
+          <div
             className="w-full h-full bg-cover bg-center"
             style={{ backgroundImage: 'url(/dark-bg-default.png)' }}
           />
@@ -120,14 +120,17 @@ export default function PendingPayouts() {
           )}></div>
         </div>
       )}
-      <div className="max-w-6xl mx-auto">
+      <div className={cn(
+        "max-w-6xl mx-auto p-6 rounded-2xl",
+        !plainLayout && "bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 shadow-2xl"
+      )}>
         <div className="flex items-center gap-4 mb-8">
           <Link href="/" data-testid="link-back-home">
             <button
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
+                "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-bold",
                 theme === "light" && "hover:bg-slate-100 text-slate-700",
-                theme === "dark" && "bg-slate-800/70 hover:bg-slate-800/90 text-slate-300"
+                theme === "dark" && "bg-slate-800/70 hover:bg-slate-700 text-white"
               )}
               data-testid="button-back"
             >
@@ -135,14 +138,22 @@ export default function PendingPayouts() {
               Back
             </button>
           </Link>
-          <h1 className="text-3xl font-bold" data-testid="text-page-title">Pending Payouts</h1>
+          <h1 className={cn(
+            "text-3xl font-black uppercase tracking-tight drop-shadow-lg",
+            theme === "dark" ? "text-white" : "text-slate-900"
+          )} data-testid="text-page-title">Pending Payouts</h1>
         </div>
 
         {/* Receivables Section */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold flex items-center gap-2" data-testid="text-receivables-header">
-              <Receipt className="w-6 h-6" />
+            <h2 className={cn(
+              "text-xl font-black uppercase tracking-tight flex items-center gap-3 drop-shadow-md",
+              theme === "dark" ? "text-green-400" : "text-green-700"
+            )} data-testid="text-receivables-header">
+              <div className="p-2 rounded-lg bg-green-500/20">
+                <Receipt className="w-5 h-5" />
+              </div>
               Receivables (Waiting on Clients)
             </h2>
             <button
@@ -172,9 +183,9 @@ export default function PendingPayouts() {
                   value={newClientName}
                   onChange={(e) => setNewClientName(e.target.value)}
                   className={cn(
-                    "px-3 py-2 rounded-lg border outline-none",
-                    theme === "light" && "bg-white border-slate-300 focus:border-blue-500",
-                    theme === "dark" && "bg-slate-700 border-slate-600 focus:border-blue-400"
+                    "px-4 py-3 rounded-xl border-2 outline-none font-bold transition-all",
+                    theme === "light" && "bg-white border-slate-200 focus:border-green-500 text-slate-900 placeholder:text-slate-400",
+                    theme === "dark" && "bg-slate-900/50 border-slate-600 focus:border-green-400 text-white placeholder:text-slate-500"
                   )}
                   data-testid="input-client-name"
                 />
@@ -184,9 +195,9 @@ export default function PendingPayouts() {
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   className={cn(
-                    "px-3 py-2 rounded-lg border outline-none",
-                    theme === "light" && "bg-white border-slate-300 focus:border-blue-500",
-                    theme === "dark" && "bg-slate-700 border-slate-600 focus:border-blue-400"
+                    "px-4 py-3 rounded-xl border-2 outline-none font-bold transition-all",
+                    theme === "light" && "bg-white border-slate-200 focus:border-green-500 text-slate-900 placeholder:text-slate-400",
+                    theme === "dark" && "bg-slate-900/50 border-slate-600 focus:border-green-400 text-white placeholder:text-slate-500"
                   )}
                   data-testid="input-description"
                 />
@@ -196,9 +207,9 @@ export default function PendingPayouts() {
                   value={newAmount}
                   onChange={(e) => setNewAmount(e.target.value)}
                   className={cn(
-                    "px-3 py-2 rounded-lg border outline-none",
-                    theme === "light" && "bg-white border-slate-300 focus:border-blue-500",
-                    theme === "dark" && "bg-slate-700 border-slate-600 focus:border-blue-400"
+                    "px-4 py-3 rounded-xl border-2 outline-none font-black text-lg transition-all",
+                    theme === "light" && "bg-white border-slate-200 focus:border-green-500 text-slate-900 placeholder:text-slate-400",
+                    theme === "dark" && "bg-slate-900/50 border-slate-600 focus:border-green-400 text-white placeholder:text-slate-500"
                   )}
                   data-testid="input-amount"
                 />
@@ -244,13 +255,13 @@ export default function PendingPayouts() {
                 )} />
                 <div>
                   <div className={cn(
-                    "text-sm",
-                    theme === "light" && "text-gray-600",
-                    theme === "dark" && "text-gray-400"
+                    "text-[10px] font-black uppercase tracking-[0.15em]",
+                    theme === "light" && "text-green-600/70",
+                    theme === "dark" && "text-green-300/70"
                   )}>Total Pending Receivables</div>
                   <div className={cn(
-                    "text-2xl font-bold",
-                    theme === "dark" ? "text-green-400" : "text-green-600"
+                    "text-3xl font-black",
+                    theme === "dark" ? "text-white" : "text-green-800"
                   )} data-testid="text-total-receivables">
                     ${totalReceivables.toLocaleString()}
                   </div>
@@ -281,22 +292,25 @@ export default function PendingPayouts() {
                     data-testid={`row-receivable-${receivable.id}`}
                   >
                     <div className="flex-1">
-                      <div className="font-medium" data-testid={`text-receivable-client-${receivable.id}`}>
+                      <div className={cn(
+                        "font-black text-base uppercase tracking-tight",
+                        theme === "dark" ? "text-white" : "text-slate-900"
+                      )} data-testid={`text-receivable-client-${receivable.id}`}>
                         {receivable.clientName}
                       </div>
                       {receivable.description && (
                         <div className={cn(
-                          "text-sm",
-                          theme === "light" && "text-gray-600",
-                          theme === "dark" && "text-gray-400"
+                          "text-sm font-bold",
+                          theme === "light" && "text-slate-600",
+                          theme === "dark" && "text-slate-400"
                         )} data-testid={`text-receivable-desc-${receivable.id}`}>
                           {receivable.description}
                         </div>
                       )}
                     </div>
                     <div className={cn(
-                      "font-semibold text-lg",
-                      theme === "dark" ? "text-green-400" : "text-green-600"
+                      "font-black text-xl",
+                      theme === "dark" ? "text-green-400" : "text-green-700"
                     )} data-testid={`text-receivable-amount-${receivable.id}`}>
                       ${receivable.amount.toLocaleString()}
                     </div>
@@ -332,19 +346,24 @@ export default function PendingPayouts() {
             </div>
           ) : (
             <div className={cn(
-              "text-center py-8 rounded-lg border",
-              theme === "light" && "bg-white border-slate-200 text-gray-500",
-              theme === "dark" && "bg-slate-800/90 border-slate-700/50 text-gray-400"
+              "text-center py-8 rounded-xl border-2",
+              theme === "light" && "bg-white/90 border-slate-200 text-slate-600",
+              theme === "dark" && "bg-slate-800 border-slate-600 text-slate-300"
             )} data-testid="text-no-receivables">
-              No pending receivables
+              <span className="font-bold">No pending receivables</span>
             </div>
           )}
         </div>
 
         {/* Payouts Section */}
         <div>
-          <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2" data-testid="text-payouts-header">
-            <DollarSign className="w-6 h-6" />
+          <h2 className={cn(
+            "text-xl font-black uppercase tracking-tight mb-4 flex items-center gap-3 drop-shadow-md",
+            theme === "dark" ? "text-blue-400" : "text-blue-700"
+          )} data-testid="text-payouts-header">
+            <div className="p-2 rounded-lg bg-blue-500/20">
+              <DollarSign className="w-5 h-5" />
+            </div>
             Payouts (Owed to Payees)
           </h2>
 
@@ -362,13 +381,13 @@ export default function PendingPayouts() {
                   )} />
                   <div>
                     <div className={cn(
-                      "text-sm",
-                      theme === "light" && "text-gray-600",
-                      theme === "dark" && "text-gray-400"
+                      "text-[10px] font-black uppercase tracking-[0.15em]",
+                      theme === "light" && "text-blue-600/70",
+                      theme === "dark" && "text-blue-300/70"
                     )}>Total Unpaid Across All Payees</div>
                     <div className={cn(
-                      "text-2xl font-bold",
-                      theme === "dark" ? "text-blue-400" : "text-blue-600"
+                      "text-3xl font-black",
+                      theme === "dark" ? "text-white" : "text-blue-800"
                     )} data-testid="text-total-unpaid">
                       ${totalAllPayees.toLocaleString()}
                     </div>
@@ -393,12 +412,15 @@ export default function PendingPayouts() {
                       theme === "dark" && "bg-slate-900/80 border-slate-700/50"
                     )}>
                       <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-semibold" data-testid={`text-payee-name-${payeeGroup.name}`}>
+                        <h2 className={cn(
+                          "text-lg font-black uppercase tracking-tight",
+                          theme === "dark" ? "text-white" : "text-slate-900"
+                        )} data-testid={`text-payee-name-${payeeGroup.name}`}>
                           {payeeGroup.name}
                         </h2>
                         <div className={cn(
-                          "text-lg font-bold",
-                          theme === "dark" ? "text-red-400" : "text-red-600"
+                          "text-xl font-black",
+                          theme === "dark" ? "text-red-400" : "text-red-700"
                         )} data-testid={`text-payee-total-${payeeGroup.name}`}>
                           ${payeeGroup.totalUnpaid.toLocaleString()}
                         </div>
@@ -422,18 +444,24 @@ export default function PendingPayouts() {
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">
-                              <div className="font-medium mb-1" data-testid={`text-task-title-${task.taskId}`}>
+                              <div className={cn(
+                                "font-black uppercase tracking-tight mb-1",
+                                theme === "dark" ? "text-white" : "text-slate-900"
+                              )} data-testid={`text-task-title-${task.taskId}`}>
                                 {task.taskTitle}
                               </div>
                               <div className={cn(
-                                "text-sm",
-                                theme === "light" && "text-gray-600",
-                                theme === "dark" && "text-gray-400"
+                                "text-sm font-bold",
+                                theme === "light" && "text-slate-600",
+                                theme === "dark" && "text-slate-400"
                               )} data-testid={`text-task-reason-${task.taskId}`}>
                                 {task.reason}
                               </div>
                             </div>
-                            <div className="font-semibold" data-testid={`text-task-amount-${task.taskId}`}>
+                            <div className={cn(
+                              "font-black text-lg",
+                              theme === "dark" ? "text-indigo-400" : "text-indigo-700"
+                            )} data-testid={`text-task-amount-${task.taskId}`}>
                               ${task.amount.toLocaleString()}
                             </div>
                           </div>
@@ -446,11 +474,11 @@ export default function PendingPayouts() {
             </>
           ) : (
             <div className={cn(
-              "text-center py-8 rounded-lg border",
-              theme === "light" && "bg-white border-slate-200 text-gray-500",
-              theme === "dark" && "bg-slate-800/90 border-slate-700/50 text-gray-400"
+              "text-center py-8 rounded-xl border-2",
+              theme === "light" && "bg-white/90 border-slate-200 text-slate-600",
+              theme === "dark" && "bg-slate-800 border-slate-600 text-slate-300"
             )} data-testid="text-no-pending">
-              No pending payouts
+              <span className="font-bold">No pending payouts</span>
             </div>
           )}
         </div>

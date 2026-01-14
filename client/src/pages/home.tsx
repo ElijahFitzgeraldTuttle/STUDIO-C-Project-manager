@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskCard } from "@/components/task-card";
-import { Plus, Search, SlidersHorizontal, LogOut, Mountain, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, Apple, Sun, Moon, CheckSquare, Zap, Layout } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { format, isPast, isToday, formatDistanceToNow } from "date-fns";
+import { Plus, Search, SlidersHorizontal, LogOut, Mountain, X, Settings, Trash2, ChevronUp, ChevronDown, DollarSign, MoreVertical, Edit2, Palette, Apple, Sun, Moon, CheckSquare, Layout, Calendar, ListTodo, AlertCircle, ChevronRight, ChevronDown as ChevronDownIcon, Clock, Folder } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchTasks, updateTask, getUnreadCounts, createTask, deleteTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn } from "@/lib/api";
+import { fetchTasks, updateTask, getUnreadCounts, createTask, deleteTask, fetchDashboards, createDashboard, updateDashboard, deleteDashboard, fetchColumns, createColumn, updateColumn, deleteColumn, fetchSubtasks } from "@/lib/api";
 import { dbTaskToTask, taskToDbTask, type Task, type Status, statusConfig } from "@/lib/types";
 import { useUser } from "@/contexts/UserContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -19,6 +20,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -43,6 +50,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FlappyBird } from "@/components/flappy-bird";
+import { SlotsGame } from "@/components/slots-game";
 
 function UserAvatar() {
   const { currentUser, logout } = useUser();
@@ -158,6 +167,202 @@ function DroppableColumn({ id, children, className, style }: { id: string; child
   );
 }
 
+// Enhanced Upcoming Task Item with subtasks, dashboard name, and expandable view
+interface UpcomingTaskItemProps {
+  task: Task;
+  dashboardName: string;
+  onUpdate: (task: Task) => void;
+  onDelete: (taskId: number) => void;
+  unreadCount: number;
+  trackingFields?: string[];
+  trackingLabels?: Record<string, string>;
+  animationDelay?: number;
+}
+
+function UpcomingTaskItem({
+  task,
+  dashboardName,
+  onUpdate,
+  onDelete,
+  unreadCount,
+  trackingFields,
+  trackingLabels,
+  animationDelay = 0
+}: UpcomingTaskItemProps) {
+  const { theme } = useTheme();
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Fetch subtasks for this task
+  const { data: subtasks = [] } = useQuery({
+    queryKey: ["subtasks", task.id],
+    queryFn: () => fetchSubtasks(task.id),
+    enabled: !!task.id,
+  });
+
+  const completedSubtasks = subtasks.filter(s => s.completed).length;
+  const totalSubtasks = subtasks.length;
+
+  // Due date calculations
+  const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+  const isOverdue = dueDate && isPast(dueDate) && !isToday(dueDate);
+  const isDueToday = dueDate && isToday(dueDate);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: animationDelay }}
+    >
+      {/* Trigger card that opens TaskCard dialog */}
+      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+        <DialogTrigger asChild>
+          <div
+            className={cn(
+              "p-4 rounded-xl border-2 cursor-pointer transition-all hover:translate-x-1 outline-none focus-within:ring-2 focus-within:ring-indigo-500",
+              theme === "dark"
+                ? "bg-slate-800/80 border-slate-700/50 hover:border-indigo-500/50 hover:bg-slate-800"
+                : "bg-white border-slate-100 hover:border-indigo-200 hover:shadow-lg shadow-sm"
+            )}
+          >
+            {/* Due Date - Prominently displayed at top */}
+            {dueDate && (
+              <div className={cn(
+                "flex items-center gap-2 text-xs font-black px-2.5 py-1.5 rounded-lg mb-3 w-fit",
+                isOverdue && "bg-red-500/15 text-red-500 border border-red-500/30",
+                isDueToday && "bg-amber-500/15 text-amber-500 border border-amber-500/30",
+                !isOverdue && !isDueToday && (theme === "dark"
+                  ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/30"
+                  : "bg-indigo-50 text-indigo-600 border border-indigo-200")
+              )}>
+                {isOverdue && <AlertCircle className="w-3.5 h-3.5" />}
+                {isDueToday && <Clock className="w-3.5 h-3.5" />}
+                {!isOverdue && !isDueToday && <Calendar className="w-3.5 h-3.5" />}
+                <span className="uppercase tracking-tight">
+                  {isOverdue && "Overdue: "}
+                  {isDueToday && "Due Today: "}
+                  {format(dueDate, "EEE, MMM d")}
+                </span>
+                {!isDueToday && dueDate && (
+                  <span className="opacity-70">
+                    ({formatDistanceToNow(dueDate, { addSuffix: true })})
+                  </span>
+                )}
+              </div>
+            )}
+            {!dueDate && (
+              <div className={cn(
+                "flex items-center gap-2 text-xs font-medium px-2.5 py-1.5 rounded-lg mb-3 w-fit",
+                theme === "dark" ? "bg-slate-700/50 text-slate-400" : "bg-slate-100 text-slate-500"
+              )}>
+                <Calendar className="w-3.5 h-3.5" />
+                <span>No due date</span>
+              </div>
+            )}
+
+            {/* Task Title */}
+            <div className={cn(
+              "text-sm font-black leading-tight drop-shadow-sm mb-2",
+              theme === "dark" ? "text-white" : "text-slate-900"
+            )}>{task.title}</div>
+
+            {/* Dashboard Name Badge */}
+            <div className={cn(
+              "flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-md w-fit mb-3",
+              theme === "dark" ? "bg-slate-700/50 text-slate-400" : "bg-slate-100 text-slate-500"
+            )}>
+              <Folder className="w-3 h-3" />
+              <span>{dashboardName}</span>
+            </div>
+
+            {/* Status Badge */}
+            <div className="flex items-center gap-2 mb-3">
+              <span className={cn(
+                "text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-widest",
+                theme === "dark" ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20" : "bg-indigo-50 text-indigo-700 border border-indigo-100"
+              )}>{task.status}</span>
+            </div>
+
+            {/* Subtasks Section */}
+            {totalSubtasks > 0 && (
+              <div className={cn(
+                "p-2.5 rounded-lg border",
+                theme === "dark" ? "bg-slate-700/30 border-slate-600/50" : "bg-slate-50 border-slate-100"
+              )}>
+                <div className={cn(
+                  "flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest mb-2",
+                  theme === "dark" ? "text-slate-300" : "text-slate-600"
+                )}>
+                  <ListTodo className="w-3 h-3" />
+                  <span>{completedSubtasks}/{totalSubtasks} Subtasks</span>
+                </div>
+                {/* Progress bar */}
+                <div className={cn(
+                  "h-1.5 rounded-full overflow-hidden",
+                  theme === "dark" ? "bg-slate-600" : "bg-slate-200"
+                )}>
+                  <div
+                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-300"
+                    style={{ width: `${totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0}%` }}
+                  />
+                </div>
+                {/* List first 2 incomplete subtasks */}
+                <div className="mt-2 space-y-1">
+                  {subtasks.filter(s => !s.completed).slice(0, 2).map(subtask => (
+                    <div key={subtask.id} className={cn(
+                      "flex items-center gap-2 text-xs",
+                      theme === "dark" ? "text-slate-300" : "text-slate-600"
+                    )}>
+                      <div className={cn(
+                        "w-1.5 h-1.5 rounded-full",
+                        theme === "dark" ? "bg-indigo-400" : "bg-indigo-500"
+                      )} />
+                      <span className="truncate font-medium">{subtask.title}</span>
+                    </div>
+                  ))}
+                  {subtasks.filter(s => !s.completed).length > 2 && (
+                    <div className={cn(
+                      "text-[10px] pl-3.5",
+                      theme === "dark" ? "text-slate-500" : "text-slate-400"
+                    )}>
+                      +{subtasks.filter(s => !s.completed).length - 2} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Expand indicator */}
+            <div className={cn(
+              "flex items-center justify-center gap-1 mt-3 text-[10px] font-medium",
+              theme === "dark" ? "text-slate-500" : "text-slate-400"
+            )}>
+              <span>Click to expand</span>
+              <ChevronRight className="w-3 h-3" />
+            </div>
+          </div>
+        </DialogTrigger>
+
+        {/* Full Task Dialog - Uses TaskCard's dialog content style */}
+        <DialogContent className={cn(
+          "sm:max-w-[1100px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0",
+          theme === "dark" && "bg-slate-800 border-slate-700"
+        )}>
+          <div className="overflow-y-auto">
+            <TaskCard
+              task={task}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+              unreadCount={unreadCount}
+              trackingFields={trackingFields}
+              trackingLabels={trackingLabels}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </motion.div>
+  );
+}
+
 export default function Home() {
   const queryClient = useQueryClient();
   const { currentUser } = useUser();
@@ -172,14 +377,15 @@ export default function Home() {
   const [showDashboardInput, setShowDashboardInput] = useState(false);
   const [editingDashboardId, setEditingDashboardId] = useState<number | null>(null);
   const [editingDashboardName, setEditingDashboardName] = useState("");
-  const [isColumnSettingsOpen, setIsColumnSettingsOpen] = useState(false);
-  const [isTrackingSettingsOpen, setIsTrackingSettingsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState("columns");
   const [editingColumnId, setEditingColumnId] = useState<number | null>(null);
   const [editingColumnName, setEditingColumnName] = useState("");
   const [editingColumnColor, setEditingColumnColor] = useState("");
   const [newColumnName, setNewColumnName] = useState("");
   const [newColumnColor, setNewColumnColor] = useState("#f1f5f9");
   const [newTrackingField, setNewTrackingField] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [mousePixelPosition, setMousePixelPosition] = useState({ x: 0, y: 0 });
   const [repelMode, setRepelMode] = useState(false);
   const [plainLayout, setPlainLayout] = useState(() => {
@@ -258,6 +464,12 @@ export default function Home() {
     enabled: currentDashboardId !== null,
   });
 
+  // Fetch ALL tasks across all dashboards for the sidebar "My Upcoming Tasks"
+  const { data: allDbTasks = [] } = useQuery({
+    queryKey: ["tasks", null],
+    queryFn: () => fetchTasks(null),
+  });
+
   const { data: unreadCounts = {} } = useQuery({
     queryKey: ["unreadCounts", currentUser],
     queryFn: () => getUnreadCounts(currentUser!),
@@ -266,6 +478,7 @@ export default function Home() {
   });
 
   const tasks = dbTasks.map(dbTaskToTask);
+  const allTasks = allDbTasks.map(dbTaskToTask);
 
   const updateTaskMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<Task> }) =>
@@ -300,9 +513,11 @@ export default function Home() {
   const currentDashboard = dashboards.find(d => d.id === currentDashboardId);
 
   // Set current dashboard to first one when dashboards load
-  if (dashboards.length > 0 && currentDashboardId === null) {
-    setCurrentDashboardId(dashboards[0].id);
-  }
+  useEffect(() => {
+    if (dashboards.length > 0 && currentDashboardId === null) {
+      setCurrentDashboardId(dashboards[0].id);
+    }
+  }, [dashboards, currentDashboardId]);
 
   const { data: columns = [] } = useQuery({
     queryKey: ["columns", currentDashboardId],
@@ -446,10 +661,7 @@ export default function Home() {
       status: newTaskStatus,
       assignees: [],
       tags: [],
-      deliveredTracking: false,
-      invoicedTracking: false,
-      paidTracking: false,
-      distributedTracking: false,
+      tracking: JSON.stringify({}),
       dashboardId: currentDashboardId,
     });
   };
@@ -520,11 +732,22 @@ export default function Home() {
         {/* Header */}
         {/* Header */}
         <header className={cn(
-          "sticky top-0 z-10 backdrop-blur-md border-b px-6 py-2 transition-all",
-          theme === "light" && "bg-white/80 border-slate-200/60",
-          theme === "dark" && "bg-slate-900/80 border-slate-700/50"
+          "sticky top-0 z-30 backdrop-blur-xl border-b px-6 py-3 transition-all",
+          theme === "light" && "bg-white/90 border-slate-200/60 shadow-sm",
+          theme === "dark" && "bg-slate-900/90 border-slate-700/50 shadow-md"
         )}>
           <div className="max-w-[1800px] mx-auto flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className={cn(
+                "transition-transform active:scale-95",
+                theme === "dark" ? "text-indigo-400 hover:bg-slate-800" : "text-indigo-600 hover:bg-slate-100"
+              )}
+            >
+              <Layout className="w-5 h-5" />
+            </Button>
             {/* Project List */}
             <div className="flex items-center gap-1 flex-1 overflow-x-auto no-scrollbar py-1">
               <div className="flex items-center gap-2 mr-4 text-slate-400 dark:text-slate-500 font-semibold text-xs tracking-wider uppercase pl-1">
@@ -569,20 +792,23 @@ export default function Home() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e: React.MouseEvent) => e.stopPropagation()}
                             className="inline-flex items-center justify-center w-5 h-5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors opacity-0 group-hover:opacity-100"
                           >
                             <MoreVertical className="w-3 h-3" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); startEditingDashboard(dashboard.id, dashboard.name); }}>
+                          <DropdownMenuItem onClick={(e: React.MouseEvent) => { e.stopPropagation(); startEditingDashboard(dashboard.id, dashboard.name); }}>
                             <Edit2 className="w-4 h-4 mr-2" /> Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e: React.MouseEvent) => { e.stopPropagation(); setIsSettingsOpen(true); setActiveSettingsTab("tracking"); }}>
+                            <CheckSquare className="w-4 h-4 mr-2" /> Tracking Fields
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-600">
+                              <DropdownMenuItem onSelect={(e: Event) => e.preventDefault()} className="text-red-600 focus:text-red-600">
                                 <Trash2 className="w-4 h-4 mr-2" /> Delete
                               </DropdownMenuItem>
                             </AlertDialogTrigger>
@@ -652,33 +878,22 @@ export default function Home() {
                 title="Change Layout"
               >
                 {!plainLayout ? <Mountain className="w-4 h-4" /> : theme === "light" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                <span className="hidden lg:inline">Layout</span>
+                <span className="hidden lg:inline font-bold">Layout</span>
               </button>
 
               <button
-                onClick={toggleRepelMode}
+                onClick={() => {
+                  setIsSettingsOpen(true);
+                  setActiveSettingsTab("columns");
+                }}
                 className={cn(
                   "p-2 rounded-lg transition-all flex items-center gap-2 text-sm font-medium",
-                  repelMode
-                    ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400"
-                    : theme === "dark" ? "text-slate-400 hover:bg-slate-800" : "text-slate-500 hover:bg-slate-100"
-                )}
-                title="Repel Mode"
-              >
-                <Zap className="w-4 h-4" />
-                <span className="hidden lg:inline">Interactivity</span>
-              </button>
-
-              <button
-                onClick={() => setIsColumnSettingsOpen(true)}
-                className={cn(
-                  "p-2 rounded-lg transition-all flex items-center gap-2 text-sm font-medium",
-                  theme === "dark" ? "text-slate-400 hover:bg-slate-800" : "text-slate-500 hover:bg-slate-100"
+                  theme === "dark" ? "text-indigo-400 hover:bg-slate-800" : "text-indigo-600 hover:bg-slate-100"
                 )}
                 title="Settings"
               >
                 <Settings className="w-4 h-4" />
-                <span className="hidden lg:inline">Settings</span>
+                <span className="hidden lg:inline font-bold">Settings</span>
               </button>
 
               <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1" />
@@ -689,345 +904,453 @@ export default function Home() {
 
 
         {/* Board */}
-        <main className="max-w-[1800px] mx-auto p-6 overflow-x-auto">
-          <div className="flex gap-6 min-w-[1200px]">
-            {columns.map((column) => {
-              // Use column name directly, fallback to statusConfig for icon only
-              const columnTasks = tasks.filter(t => t.status === column.name);
-              const defaultConfig = statusConfig[column.name as Status];
-              const Icon = defaultConfig?.icon || SlidersHorizontal;
-
-              return (
-                <div
-                  key={column.id}
-                  className="flex-1 min-w-[300px] flex flex-col h-full"
-                >
-                  {/* Column Header */}
-                  <div className={cn(
-                    "flex items-center justify-between mb-4 p-3 rounded-xl border",
-                    theme === "light" && "bg-white border-slate-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)]",
-                    theme === "dark" && "bg-slate-800/90 border-slate-700/80 shadow-[0_4px_16px_rgba(0,0,0,0.15)]"
+        <div className="flex flex-1 h-[calc(100vh-57px)] overflow-hidden">
+          {/* Sidebar */}
+          <AnimatePresence mode="popLayout">
+            {isSidebarOpen && (
+              <motion.aside
+                initial={{ x: -320, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -320, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className={cn(
+                  "w-80 border-r flex flex-col transition-colors z-10 shadow-xl",
+                  theme === "dark" ? "bg-slate-900/60 backdrop-blur-md border-slate-700/50" : "bg-white border-slate-200/60"
+                )}
+              >
+                <div className="p-6 border-b flex items-center justify-between">
+                  <h2 className={cn(
+                    "text-sm font-black flex items-center gap-2 tracking-tight uppercase",
+                    theme === "dark" ? "text-indigo-400" : "text-indigo-600"
                   )}>
-                    <div className="flex items-center gap-2">
-                      <div className={cn("p-1.5 rounded-md")} style={{ backgroundColor: column.color }}>
-                        <Icon className={cn("w-4 h-4", defaultConfig?.color || "text-slate-600")} />
-                      </div>
-                      <h2 className={cn(
-                        "font-semibold text-sm capitalize",
-                        theme === "dark" ? "text-slate-200" : "text-slate-700"
-                      )}>{column.name}</h2>
-                      <span className={cn(
-                        "text-xs font-medium px-2 py-0.5 rounded-full",
-                        theme === "dark" ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500"
-                      )}>
-                        {columnTasks.length}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Column Content */}
-                  <DroppableColumn
-                    id={column.name}
-                    className={cn(
-                      "flex-1 rounded-xl p-3 border flex flex-col gap-3 min-h-[500px] transition-all",
-                      // Light theme
-                      theme === "light" && "bg-slate-50/80 border-slate-200/80 shadow-[0_8px_24px_rgba(0,0,0,0.06)]",
-                      // Dark theme
-                      theme === "dark" && "bg-slate-800/40 backdrop-blur-sm border-slate-700/70 shadow-[0_12px_32px_rgba(0,0,0,0.2)]"
-                    )}
-                    style={{ backgroundColor: theme === "light" ? column.color + "20" : undefined }}
-                    data-testid={`column-${column.name}`}
-                  >
-                    <SortableContext items={columnTasks.map(t => t.id.toString())} strategy={verticalListSortingStrategy}>
-                      <AnimatePresence mode="popLayout">
-                        {columnTasks.map((task) => (
-                          <DraggableTask
-                            key={task.id}
-                            task={task}
-                            onUpdate={handleUpdateTask}
-                            onDelete={(taskId) => deleteTaskMutation.mutate(taskId)}
-                            unreadCount={unreadCounts[task.id] || 0}
-                            repelMode={repelMode}
-                            mousePixelPosition={mousePixelPosition}
-                            trackingFields={currentDashboard?.trackingFields}
-                            trackingLabels={currentDashboard?.trackingLabels ? (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : undefined}
-                          />
-                        ))}
-                      </AnimatePresence>
-                    </SortableContext>
-
-                    {columnTasks.length === 0 && (
-                      <div className="flex flex-col items-center justify-center h-32 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg mx-2 my-4">
-                        <p className="text-xs font-medium">No tasks</p>
-                      </div>
-                    )}
-
-                    <Dialog open={isAddTaskOpen && newTaskStatus === column.name} onOpenChange={(open) => {
-                      if (!open) setIsAddTaskOpen(false);
-                    }}>
-                      <DialogTrigger asChild>
-                        <button
-                          onClick={() => {
-                            setNewTaskStatus(column.name as Status);
-                            setIsAddTaskOpen(true);
-                          }}
-                          className="mt-auto flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-white/50 rounded-lg transition-all border border-transparent hover:border-slate-200/50 group"
-                          data-testid={`button-add-task-${column.name}`}
-                        >
-                          <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                          Add Task
-                        </button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[500px]">
-                        <DialogHeader>
-                          <DialogTitle>Create New Task</DialogTitle>
-                          <DialogDescription>
-                            Add a new task to {column.name}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <form onSubmit={handleCreateTask} className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="title">Title</Label>
-                            <Input
-                              id="title"
-                              value={newTaskTitle}
-                              onChange={(e) => setNewTaskTitle(e.target.value)}
-                              placeholder="Enter task title..."
-                              data-testid="input-task-title"
-                              autoFocus
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="description">Description</Label>
-                            <Textarea
-                              id="description"
-                              value={newTaskDescription}
-                              onChange={(e) => setNewTaskDescription(e.target.value)}
-                              placeholder="Enter task description..."
-                              rows={4}
-                              data-testid="input-task-description"
-                            />
-                          </div>
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => setIsAddTaskOpen(false)}
-                              data-testid="button-cancel-task"
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              type="submit"
-                              disabled={!newTaskTitle.trim()}
-                              data-testid="button-create-task"
-                            >
-                              Create Task
-                            </Button>
-                          </div>
-                        </form>
-                      </DialogContent>
-                    </Dialog>
-                  </DroppableColumn>
+                    <CheckSquare className="w-4 h-4" />
+                    My Upcoming Tasks
+                  </h2>
                 </div>
-              );
-            })}
-          </div>
-        </main>
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {allTasks.filter(t => t.assignees.includes(currentUser || "") && t.status !== "complete").sort((a, b) => {
+                    // Sort by due date first (null dates last), then by title
+                    if (!a.dueDate && !b.dueDate) return a.title.localeCompare(b.title);
+                    if (!a.dueDate) return 1;
+                    if (!b.dueDate) return -1;
+                    return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+                  }).map((task, idx) => {
+                    // Find the dashboard name for this task
+                    const taskDashboard = dashboards.find(d => d.id === task.dashboardId);
+                    const dashboardName = taskDashboard?.name || "Unknown Project";
 
-        {/* Column Settings Dialog */}
-        <Dialog open={isColumnSettingsOpen} onOpenChange={setIsColumnSettingsOpen}>
-          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Manage Workflow Columns</DialogTitle>
-              <DialogDescription>
-                Add, edit, delete, and reorder columns for this dashboard
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-3 my-4">
-              {columns.map((column, index) => (
-                <div key={column.id} className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  {editingColumnId === column.id ? (
-                    <>
-                      <Input
-                        value={editingColumnName}
-                        onChange={(e) => setEditingColumnName(e.target.value)}
-                        className="h-9 flex-1"
-                        placeholder="Column name"
-                        data-testid={`input-column-name-${column.id}`}
+                    return (
+                      <UpcomingTaskItem
+                        key={task.id}
+                        task={task}
+                        dashboardName={dashboardName}
+                        onUpdate={handleUpdateTask}
+                        onDelete={(taskId) => deleteTaskMutation.mutate(taskId)}
+                        unreadCount={unreadCounts[task.id] || 0}
+                        trackingFields={taskDashboard?.trackingFields}
+                        trackingLabels={taskDashboard?.trackingLabels ? JSON.parse(taskDashboard.trackingLabels) : undefined}
+                        animationDelay={idx * 0.05}
                       />
-                      <Input
-                        type="color"
-                        value={editingColumnColor}
-                        onChange={(e) => setEditingColumnColor(e.target.value)}
-                        className="h-9 w-20"
-                        data-testid={`input-column-color-${column.id}`}
-                      />
-                      <Button
-                        size="sm"
-                        onClick={() => handleUpdateColumn(column.id)}
-                        data-testid={`button-save-column-${column.id}`}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingColumnId(null);
-                          setEditingColumnName("");
-                          setEditingColumnColor("");
-                        }}
-                        data-testid={`button-cancel-column-${column.id}`}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <div
-                        className="w-6 h-6 rounded"
-                        style={{ backgroundColor: column.color }}
-                      />
-                      <span className="flex-1 font-medium capitalize">{column.name}</span>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7"
-                          onClick={() => handleMoveColumn(column.id, 'up')}
-                          disabled={index === 0}
-                          data-testid={`button-move-up-${column.id}`}
-                        >
-                          <ChevronUp className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7"
-                          onClick={() => handleMoveColumn(column.id, 'down')}
-                          disabled={index === columns.length - 1}
-                          data-testid={`button-move-down-${column.id}`}
-                        >
-                          <ChevronDown className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7"
-                          onClick={() => {
-                            setEditingColumnId(column.id);
-                            setEditingColumnName(column.name);
-                            setEditingColumnColor(column.color);
-                          }}
-                          data-testid={`button-edit-column-${column.id}`}
-                        >
-                          <Settings className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => handleDeleteColumn(column.id, column.name)}
-                          data-testid={`button-delete-column-${column.id}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                    );
+                  })}
+                  {allTasks.filter(t => t.assignees.includes(currentUser || "") && t.status !== "complete").length === 0 && (
+                    <div className="text-center py-12 px-6">
+                      <div className="text-slate-400 text-xs font-medium bg-slate-400/10 py-4 rounded-xl border-2 border-dashed border-slate-400/20">
+                        No upcoming tasks assigned to you.
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
-              ))}
-            </div>
+              </motion.aside>
+            )}
+          </AnimatePresence>
 
-            <form onSubmit={handleCreateColumn} className="flex items-center gap-2 p-3 bg-slate-100 rounded-lg border-2 border-dashed border-slate-300">
-              <Input
-                value={newColumnName}
-                onChange={(e) => setNewColumnName(e.target.value)}
-                className="h-9 flex-1 bg-white"
-                placeholder="New column name"
-                data-testid="input-new-column-name"
-              />
-              <Input
-                type="color"
-                value={newColumnColor}
-                onChange={(e) => setNewColumnColor(e.target.value)}
-                className="h-9 w-20 bg-white"
-                data-testid="input-new-column-color"
-              />
-              <Button
-                type="submit"
-                size="sm"
-                disabled={!newColumnName.trim()}
-                data-testid="button-create-column"
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Add Column
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+          {/* Board */}
+          <main className="flex-1 overflow-x-auto p-6 scrollbar-hide">
+            <div className="flex gap-6 min-w-max h-full">
+              {columns.map((column) => {
+                // Use column name directly, fallback to statusConfig for icon only
+                const columnTasks = tasks.filter(t => t.status === column.name);
+                const defaultConfig = statusConfig[column.name as Status];
+                const Icon = defaultConfig?.icon || SlidersHorizontal;
 
-        {/* Tracking Settings Dialog */}
-        <Dialog open={isTrackingSettingsOpen} onOpenChange={setIsTrackingSettingsOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Manage Tracking Checkboxes</DialogTitle>
-              <DialogDescription>
-                Choose which checkboxes to show and customize their names
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-3 my-4">
-              {[
-                { key: 'delivered', defaultLabel: 'Delivered' },
-                { key: 'invoiced', defaultLabel: 'Deposit Paid' },
-                { key: 'paid', defaultLabel: 'Fully Paid' },
-                { key: 'distributed', defaultLabel: 'Distributed' },
-              ].map(({ key, defaultLabel }) => {
-                const isEnabled = currentDashboard?.trackingFields?.includes(key) ?? true;
-                const trackingLabels = currentDashboard?.trackingLabels ?
-                  (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : {};
-                const customLabel = trackingLabels[key] || '';
                 return (
-                  <div key={key} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                    <Checkbox
-                      id={`tracking-setting-${key}`}
-                      checked={isEnabled}
-                      onCheckedChange={(checked) => {
-                        if (!currentDashboard) return;
-                        let newFields: string[];
-                        if (checked) {
-                          newFields = [...(currentDashboard.trackingFields || []), key];
-                        } else {
-                          newFields = (currentDashboard.trackingFields || []).filter(f => f !== key);
-                        }
-                        updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingFields: newFields } });
-                      }}
-                      className="h-5 w-5"
-                      data-testid={`checkbox-tracking-${key}`}
-                    />
-                    <Input
-                      value={customLabel}
-                      onChange={(e) => {
-                        if (!currentDashboard) return;
-                        const currentLabels = currentDashboard.trackingLabels ?
-                          (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : {};
-                        const newLabels = { ...currentLabels, [key]: e.target.value };
-                        updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingLabels: JSON.stringify(newLabels) } });
-                      }}
-                      placeholder={defaultLabel}
-                      className="flex-1 h-8 bg-white"
-                      data-testid={`input-tracking-label-${key}`}
-                    />
+                  <div
+                    key={column.id}
+                    className="w-80 flex flex-col h-full"
+                  >
+                    {/* Column Header */}
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={cn(
+                        "flex items-center justify-between mb-4 p-4 rounded-xl border-2 transition-all shadow-md group",
+                        theme === "light" && "bg-white border-slate-200 shadow-slate-200/50",
+                        theme === "dark" && "bg-slate-800/90 border-slate-700/80 shadow-black/40"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn("p-2 rounded-lg shadow-sm")} style={{ backgroundColor: column.color }}>
+                          <Icon className={cn("w-5 h-5", defaultConfig?.color || "text-slate-600")} />
+                        </div>
+                        <h2 className={cn(
+                          "font-black text-sm uppercase tracking-wider",
+                          theme === "dark" ? "text-white" : "text-slate-800"
+                        )}>{column.name}</h2>
+                        <span className={cn(
+                          "text-xs font-bold px-2 py-0.5 rounded-full border",
+                          theme === "dark" ? "bg-slate-700/50 text-slate-300 border-slate-600/50" : "bg-slate-100 text-slate-600 border-slate-200"
+                        )}>
+                          {columnTasks.length}
+                        </span>
+                      </div>
+                    </motion.div>
+
+                    {/* Column Content */}
+                    <DroppableColumn
+                      id={column.name}
+                      className={cn(
+                        "flex-1 rounded-xl p-3 border flex flex-col gap-3 min-h-[500px] transition-all relative overflow-y-auto max-h-[calc(100vh-250px)]",
+                        // Light theme
+                        theme === "light" && "bg-slate-50/80 border-slate-200/80 shadow-inner",
+                        // Dark theme
+                        theme === "dark" && "bg-slate-900/30 backdrop-blur-sm border-slate-700/70 shadow-inner"
+                      )}
+                      style={{ backgroundColor: theme === "light" ? column.color + "10" : undefined }}
+                      data-testid={`column-${column.name}`}
+                    >
+                      <SortableContext items={columnTasks.map(t => t.id.toString())} strategy={verticalListSortingStrategy}>
+                        <AnimatePresence mode="popLayout">
+                          {columnTasks.map((task) => (
+                            <DraggableTask
+                              key={task.id}
+                              task={task}
+                              onUpdate={handleUpdateTask}
+                              onDelete={(taskId) => deleteTaskMutation.mutate(taskId)}
+                              unreadCount={unreadCounts[task.id] || 0}
+                              repelMode={repelMode}
+                              mousePixelPosition={mousePixelPosition}
+                              trackingFields={currentDashboard?.trackingFields}
+                              trackingLabels={currentDashboard?.trackingLabels ? (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : undefined}
+                            />
+                          ))}
+                        </AnimatePresence>
+                      </SortableContext>
+
+                      {columnTasks.length === 0 && (
+                        <div className={cn(
+                          "flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-xl mx-2 my-4 transition-all",
+                          theme === "dark" ? "text-slate-500 border-slate-700/50 bg-slate-800/20" : "text-slate-400 border-slate-200 bg-slate-100/30"
+                        )}>
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em]">Add first task</p>
+                        </div>
+                      )}
+
+                      <Dialog open={isAddTaskOpen && newTaskStatus === column.name} onOpenChange={(open) => {
+                        if (!open) setIsAddTaskOpen(false);
+                      }}>
+                        <DialogTrigger asChild>
+                          <button
+                            onClick={() => {
+                              setNewTaskStatus(column.name as Status);
+                              setIsAddTaskOpen(true);
+                            }}
+                            className={cn(
+                              "mt-2 flex items-center justify-center gap-2 py-3 w-full rounded-xl transition-all shadow-lg active:scale-95 group border-2 border-dashed",
+                              theme === "dark"
+                                ? "bg-indigo-600/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/30 hover:border-indigo-500"
+                                : "bg-indigo-50 border-indigo-200 text-indigo-600 hover:bg-indigo-100 hover:border-indigo-300"
+                            )}
+                            data-testid={`button-add-task-${column.name}`}
+                          >
+                            <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <Plus className="w-4 h-4" />
+                            </div>
+                            <span className="font-bold tracking-tight">Add New Task</span>
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[500px]">
+                          <DialogHeader>
+                            <DialogTitle>Create New Task</DialogTitle>
+                            <DialogDescription>
+                              Add a new task to {column.name}
+                            </DialogDescription>
+                          </DialogHeader>
+                          <form onSubmit={handleCreateTask} className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="title">Title</Label>
+                              <Input
+                                id="title"
+                                value={newTaskTitle}
+                                onChange={(e) => setNewTaskTitle(e.target.value)}
+                                placeholder="Enter task title..."
+                                data-testid="input-task-title"
+                                autoFocus
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="description">Description</Label>
+                              <Textarea
+                                id="description"
+                                value={newTaskDescription}
+                                onChange={(e) => setNewTaskDescription(e.target.value)}
+                                placeholder="Enter task description..."
+                                rows={4}
+                                data-testid="input-task-description"
+                              />
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsAddTaskOpen(false)}
+                                data-testid="button-cancel-task"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                type="submit"
+                                disabled={!newTaskTitle.trim()}
+                                data-testid="button-create-task"
+                              >
+                                Create Task
+                              </Button>
+                            </div>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
+                    </DroppableColumn>
                   </div>
                 );
               })}
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </DndContext>
+          </main>
+
+          {/* Combined Settings Dialog */}
+          <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+            <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">Dashboard Settings</DialogTitle>
+                <DialogDescription className="font-medium">
+                  Customize workflow columns and tracking fields for <span className="text-indigo-500 font-bold">{currentDashboard?.name}</span>
+                </DialogDescription>
+              </DialogHeader>
+
+              <Tabs value={activeSettingsTab} onValueChange={setActiveSettingsTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="columns" className="font-bold">Workflow Columns</TabsTrigger>
+                  <TabsTrigger value="tracking" className="font-bold">Tracking Fields</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="columns" className="space-y-4">
+                  <div className="space-y-3">
+                    {columns.map((column, index) => (
+                      <div key={column.id} className={cn(
+                        "flex items-center gap-2 p-3 rounded-xl border-2 transition-all",
+                        theme === "dark" ? "bg-slate-800/50 border-slate-700/50" : "bg-slate-50 border-slate-200"
+                      )}>
+                        {editingColumnId === column.id ? (
+                          <>
+                            <Input
+                              value={editingColumnName}
+                              onChange={(e) => setEditingColumnName(e.target.value)}
+                              className="h-9 flex-1 font-bold"
+                              placeholder="Column name"
+                            />
+                            <Input
+                              type="color"
+                              value={editingColumnColor}
+                              onChange={(e) => setEditingColumnColor(e.target.value)}
+                              className="h-9 w-20 p-1"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => handleUpdateColumn(column.id)}
+                              className="font-bold"
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setEditingColumnId(null);
+                                setEditingColumnName("");
+                                setEditingColumnColor("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <div
+                              className="w-8 h-8 rounded-lg shadow-sm"
+                              style={{ backgroundColor: column.color }}
+                            />
+                            <span className="flex-1 font-black uppercase text-xs tracking-wider">{column.name}</span>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-slate-500"
+                                onClick={() => handleMoveColumn(column.id, 'up')}
+                                disabled={index === 0}
+                              >
+                                <ChevronUp className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-slate-500"
+                                onClick={() => handleMoveColumn(column.id, 'down')}
+                                disabled={index === columns.length - 1}
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-indigo-500 hover:bg-indigo-50"
+                                onClick={() => {
+                                  setEditingColumnId(column.id);
+                                  setEditingColumnName(column.name);
+                                  setEditingColumnColor(column.color);
+                                }}
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                onClick={() => handleDeleteColumn(column.id, column.name)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <form onSubmit={handleCreateColumn} className={cn(
+                    "flex items-center gap-2 p-4 rounded-xl border-2 border-dashed transition-all",
+                    theme === "dark" ? "bg-slate-900/50 border-slate-700" : "bg-slate-100 border-slate-300"
+                  )}>
+                    <Input
+                      value={newColumnName}
+                      onChange={(e) => setNewColumnName(e.target.value)}
+                      className="h-10 flex-1 bg-white font-bold"
+                      placeholder="New column name..."
+                    />
+                    <Input
+                      type="color"
+                      value={newColumnColor}
+                      onChange={(e) => setNewColumnColor(e.target.value)}
+                      className="h-10 w-20 p-1 bg-white"
+                    />
+                    <Button
+                      type="submit"
+                      disabled={!newColumnName.trim()}
+                      className="font-black uppercase tracking-tighter"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add Column
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="tracking" className="space-y-4">
+                  <div className="space-y-3">
+                    {currentDashboard?.trackingFields?.map((key) => {
+                      const trackingLabels = currentDashboard?.trackingLabels ?
+                        (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : {};
+                      const customLabel = trackingLabels[key] || key;
+                      return (
+                        <div key={key} className={cn(
+                          "flex items-center gap-3 p-4 rounded-xl border-2 transition-all group",
+                          theme === "dark" ? "bg-slate-800/50 border-slate-700/50" : "bg-white border-slate-200"
+                        )}>
+                          <div className="flex-1 flex items-center gap-3">
+                            <div className="w-6 h-6 rounded-md bg-indigo-500/10 flex items-center justify-center">
+                              <CheckSquare className="w-4 h-4 text-indigo-500" />
+                            </div>
+                            <Input
+                              value={customLabel}
+                              onChange={(e) => {
+                                if (!currentDashboard) return;
+                                const currentLabels = currentDashboard.trackingLabels ?
+                                  (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : {};
+                                const newLabels = { ...currentLabels, [key]: e.target.value };
+                                updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingLabels: JSON.stringify(newLabels) } });
+                              }}
+                              placeholder={key}
+                              className="flex-1 h-9 bg-transparent border-none focus-visible:ring-0 font-bold text-sm"
+                            />
+                          </div>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => {
+                              if (!currentDashboard) return;
+                              const newFields = (currentDashboard.trackingFields || []).filter(f => f !== key);
+                              updateDashboardMutation.mutate({ id: currentDashboard.id, updates: { trackingFields: newFields } });
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+
+                    <div className={cn(
+                      "flex items-center gap-2 p-4 rounded-xl border-2 border-dashed transition-all",
+                      theme === "dark" ? "bg-slate-900/50 border-slate-700" : "bg-slate-100 border-slate-300"
+                    )}>
+                      <Input
+                        value={newTrackingField}
+                        onChange={(e) => setNewTrackingField(e.target.value)}
+                        placeholder="New checkbox label (e.g. 'Delivered')"
+                        className="flex-1 h-10 bg-white font-bold"
+                      />
+                      <Button
+                        disabled={!newTrackingField.trim()}
+                        onClick={() => {
+                          if (!currentDashboard) return;
+                          const cleanKey = newTrackingField.toLowerCase().replace(/\s+/g, '_');
+                          const newFields = [...(currentDashboard.trackingFields || []), cleanKey];
+                          const currentLabels = currentDashboard.trackingLabels ?
+                            (typeof currentDashboard.trackingLabels === 'string' ? JSON.parse(currentDashboard.trackingLabels) : currentDashboard.trackingLabels) : {};
+                          const newLabels = { ...currentLabels, [cleanKey]: newTrackingField };
+
+                          updateDashboardMutation.mutate({
+                            id: currentDashboard.id,
+                            updates: {
+                              trackingFields: newFields,
+                              trackingLabels: JSON.stringify(newLabels)
+                            }
+                          });
+                          setNewTrackingField("");
+                        }}
+                        className="font-black uppercase tracking-tighter"
+                      >
+                        <Plus className="w-4 h-4 mr-1" /> Add Field
+                      </Button>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Mini-Games */}
+        <FlappyBird />
+        <SlotsGame />
+      </div >
+    </DndContext >
   );
 }

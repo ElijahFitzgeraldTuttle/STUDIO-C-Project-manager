@@ -9,6 +9,7 @@ import Login from "@/pages/login";
 import PendingPayouts from "@/pages/pending-payouts";
 import { UserProvider, useUser } from "@/contexts/UserContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { WebSocketProvider } from "@/hooks/use-websocket";
 
 function Router() {
   const { currentUser } = useUser();
@@ -32,8 +33,10 @@ function App() {
       <ThemeProvider>
         <UserProvider>
           <TooltipProvider>
-            <Toaster />
-            <Router />
+            <WebSocketProvider>
+              <Toaster />
+              <Router />
+            </WebSocketProvider>
           </TooltipProvider>
         </UserProvider>
       </ThemeProvider>

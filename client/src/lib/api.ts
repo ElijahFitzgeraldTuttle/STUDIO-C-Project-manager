@@ -1,10 +1,46 @@
-import type { Task, Comment, InsertTask, InsertComment, Subtask, InsertSubtask, Payout, Payee, InsertPayee, Dashboard, InsertDashboard, Column, InsertColumn, Receivable, InsertReceivable } from "@shared/schema";
+import type {
+  Task, Comment, InsertTask, InsertComment, Subtask, InsertSubtask,
+  Payout, Payee, InsertPayee, Dashboard, InsertDashboard, Column, InsertColumn,
+  Receivable, InsertReceivable, TeamMember, InsertTeamMember,
+  ActivityLog, InsertActivityLog, Notification, InsertNotification, SlotsCredits
+} from "@shared/schema";
 
 const API_BASE = "/api";
 
+// Pagination interface
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
+}
+
+// Task API functions
 export async function fetchTasks(dashboardId?: number | null): Promise<Task[]> {
   const url = dashboardId ? `${API_BASE}/tasks?dashboardId=${dashboardId}` : `${API_BASE}/tasks`;
   const response = await fetch(url);
+  if (!response.ok) throw new Error("Failed to fetch tasks");
+  return response.json();
+}
+
+export async function fetchTasksPaginated(
+  dashboardId?: number | null,
+  params?: PaginationParams & { includeArchived?: boolean; search?: string }
+): Promise<PaginatedResponse<Task>> {
+  const searchParams = new URLSearchParams();
+  if (dashboardId) searchParams.set("dashboardId", dashboardId.toString());
+  if (params?.page) searchParams.set("page", params.page.toString());
+  if (params?.pageSize) searchParams.set("pageSize", params.pageSize.toString());
+  if (params?.includeArchived) searchParams.set("includeArchived", "true");
+  if (params?.search) searchParams.set("search", params.search);
+
+  const response = await fetch(`${API_BASE}/tasks/paginated?${searchParams.toString()}`);
   if (!response.ok) throw new Error("Failed to fetch tasks");
   return response.json();
 }
@@ -36,6 +72,32 @@ export async function deleteTask(id: number): Promise<void> {
   if (!response.ok) throw new Error("Failed to delete task");
 }
 
+export async function archiveTask(id: number): Promise<Task> {
+  const response = await fetch(`${API_BASE}/tasks/${id}/archive`, {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error("Failed to archive task");
+  return response.json();
+}
+
+export async function restoreTask(id: number): Promise<Task> {
+  const response = await fetch(`${API_BASE}/tasks/${id}/restore`, {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error("Failed to restore task");
+  return response.json();
+}
+
+export async function reorderTasks(taskIds: number[]): Promise<void> {
+  const response = await fetch(`${API_BASE}/tasks/reorder`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ taskIds }),
+  });
+  if (!response.ok) throw new Error("Failed to reorder tasks");
+}
+
+// Comment API functions
 export async function fetchComments(taskId: number): Promise<Comment[]> {
   const response = await fetch(`${API_BASE}/tasks/${taskId}/comments`);
   if (!response.ok) throw new Error("Failed to fetch comments");
@@ -151,6 +213,7 @@ export async function fetchUnpaidPayouts(): Promise<Array<{ name: string; totalU
   return response.json();
 }
 
+// Dashboard API functions
 export async function fetchDashboards(): Promise<Dashboard[]> {
   const response = await fetch(`${API_BASE}/dashboards`);
   if (!response.ok) throw new Error("Failed to fetch dashboards");
@@ -184,6 +247,7 @@ export async function deleteDashboard(id: number): Promise<void> {
   if (!response.ok) throw new Error("Failed to delete dashboard");
 }
 
+// Column API functions
 export async function fetchColumns(dashboardId: number): Promise<Column[]> {
   const response = await fetch(`${API_BASE}/dashboards/${dashboardId}/columns`);
   if (!response.ok) throw new Error("Failed to fetch columns");
@@ -249,4 +313,139 @@ export async function deleteReceivable(id: number): Promise<void> {
     method: "DELETE",
   });
   if (!response.ok) throw new Error("Failed to delete receivable");
+}
+
+// Team Members API functions
+export async function fetchTeamMembers(): Promise<TeamMember[]> {
+  const response = await fetch(`${API_BASE}/team-members`);
+  if (!response.ok) throw new Error("Failed to fetch team members");
+  return response.json();
+}
+
+export async function createTeamMember(member: InsertTeamMember): Promise<TeamMember> {
+  const response = await fetch(`${API_BASE}/team-members`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(member),
+  });
+  if (!response.ok) throw new Error("Failed to create team member");
+  return response.json();
+}
+
+export async function updateTeamMember(id: number, member: Partial<InsertTeamMember>): Promise<TeamMember> {
+  const response = await fetch(`${API_BASE}/team-members/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(member),
+  });
+  if (!response.ok) throw new Error("Failed to update team member");
+  return response.json();
+}
+
+export async function deleteTeamMember(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE}/team-members/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete team member");
+}
+
+// Activity Log API functions
+export async function fetchActivityLog(
+  params?: PaginationParams & { taskId?: number; dashboardId?: number }
+): Promise<PaginatedResponse<ActivityLog>> {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.set("page", params.page.toString());
+  if (params?.pageSize) searchParams.set("pageSize", params.pageSize.toString());
+  if (params?.taskId) searchParams.set("taskId", params.taskId.toString());
+  if (params?.dashboardId) searchParams.set("dashboardId", params.dashboardId.toString());
+
+  const response = await fetch(`${API_BASE}/activity-log?${searchParams.toString()}`);
+  if (!response.ok) throw new Error("Failed to fetch activity log");
+  return response.json();
+}
+
+export async function fetchTaskActivityLog(taskId: number, params?: PaginationParams): Promise<ActivityLog[]> {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.set("page", params.page.toString());
+  if (params?.pageSize) searchParams.set("pageSize", params.pageSize.toString());
+
+  const response = await fetch(`${API_BASE}/tasks/${taskId}/activity?${searchParams.toString()}`);
+  if (!response.ok) throw new Error("Failed to fetch task activity");
+  return response.json();
+}
+
+// Notification API functions
+export async function fetchNotifications(userId: string, params?: PaginationParams): Promise<Notification[]> {
+  const searchParams = new URLSearchParams();
+  searchParams.set("userId", userId);
+  if (params?.page) searchParams.set("page", params.page.toString());
+  if (params?.pageSize) searchParams.set("pageSize", params.pageSize.toString());
+
+  const response = await fetch(`${API_BASE}/notifications?${searchParams.toString()}`);
+  if (!response.ok) throw new Error("Failed to fetch notifications");
+  return response.json();
+}
+
+export async function markNotificationAsRead(id: number): Promise<Notification> {
+  const response = await fetch(`${API_BASE}/notifications/${id}/read`, {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error("Failed to mark notification as read");
+  return response.json();
+}
+
+export async function markAllNotificationsAsRead(userId: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/notifications/read-all`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId }),
+  });
+  if (!response.ok) throw new Error("Failed to mark all notifications as read");
+}
+
+export async function deleteNotification(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE}/notifications/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete notification");
+}
+
+// Slots Game API functions
+export async function fetchSlotsCredits(userId: string, username: string): Promise<SlotsCredits> {
+  const searchParams = new URLSearchParams();
+  searchParams.set("userId", userId);
+  searchParams.set("username", username);
+
+  const response = await fetch(`${API_BASE}/slots/credits?${searchParams.toString()}`);
+  if (!response.ok) throw new Error("Failed to fetch slots credits");
+  return response.json();
+}
+
+export async function spinSlots(userId: string, username: string, creditsChange: number, isWin: boolean): Promise<SlotsCredits> {
+  const response = await fetch(`${API_BASE}/slots/spin`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, username, creditsChange, isWin }),
+  });
+  if (!response.ok) throw new Error("Failed to record slot spin");
+  return response.json();
+}
+
+export async function resetSlotsCredits(userId: string, username: string): Promise<SlotsCredits> {
+  const response = await fetch(`${API_BASE}/slots/reset`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, username }),
+  });
+  if (!response.ok) throw new Error("Failed to reset slots credits");
+  return response.json();
+}
+
+export async function fetchSlotsLeaderboard(limit?: number): Promise<SlotsCredits[]> {
+  const searchParams = new URLSearchParams();
+  if (limit) searchParams.set("limit", limit.toString());
+
+  const response = await fetch(`${API_BASE}/slots/leaderboard?${searchParams.toString()}`);
+  if (!response.ok) throw new Error("Failed to fetch leaderboard");
+  return response.json();
 }

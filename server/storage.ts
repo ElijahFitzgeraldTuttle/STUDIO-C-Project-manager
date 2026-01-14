@@ -1,9 +1,7 @@
+import { DatabaseStorage } from "./storage-impl";
 
-import { DatabaseStorage, IStorage } from "./storage-impl";
-import { MemStorage } from "./mem-storage";
+// Export the interface from the implementation file
+export type { IStorage } from "./storage-impl";
 
-export * from "./storage-impl";
-
-export const storage: IStorage = process.env.DATABASE_URL
-  ? new DatabaseStorage()
-  : new MemStorage();
+// Create and export the storage instance
+export const storage = new DatabaseStorage();

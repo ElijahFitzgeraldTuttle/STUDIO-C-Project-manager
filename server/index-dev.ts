@@ -2,6 +2,20 @@ import fs from "node:fs";
 import { type Server } from "node:http";
 import path from "node:path";
 
+// Load .env manualy
+const envPath = path.resolve(import.meta.dirname, "../.env");
+if (fs.existsSync(envPath)) {
+  const envConfig = fs.readFileSync(envPath, "utf-8");
+  envConfig.split("\n").forEach((line) => {
+    const parts = line.split("=");
+    if (parts.length >= 2) {
+      const key = parts[0].trim();
+      const value = parts.slice(1).join("=").trim();
+      process.env[key] = value;
+    }
+  });
+}
+
 import type { Express } from "express";
 import { nanoid } from "nanoid";
 import { createServer as createViteServer, createLogger } from "vite";
