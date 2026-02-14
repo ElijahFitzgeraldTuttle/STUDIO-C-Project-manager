@@ -80,9 +80,10 @@ export default async function runApp(
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
+  const host = process.env.HOST || "0.0.0.0";
   server.listen({
     port,
-    host: "127.0.0.1",
+    host,
   }, () => {
     log(`serving on port ${port}`);
   });
